@@ -321,6 +321,7 @@
       <a href="#sequential">06 / Sequential writes</a>
       <a href="#reverse">07 / Reversing strings</a>
       <a href="#choosing">08 / Choosing a method</a>
+      <a href="#allocators">09 / Allocators</a>
     </nav>
 
     <main>
@@ -469,6 +470,39 @@ return buffer[0..source.len];</code></pre>
             </tbody>
           </table>
           <p>Zig strings are byte slices. Copying a string copies its bytes and does not automatically add a null terminator.</p>
+        </div>
+      </section>
+
+      <section class="note" id="allocators">
+        <span class="topic-number">QUESTION 09</span>
+        <h2>Why does a function need an allocator?</h2>
+        <div class="answer">
+          <p>A function needs an allocator when it must create data whose size is known at runtime and whose lifetime must continue after the function returns. The allocator is an interface for requesting and releasing memory; it is not the memory itself.</p>
+          <pre><code>fn transform(
+    allocator: std.mem.Allocator,
+    input: []const u8,
+) std.mem.Allocator.Error![]u8 {
+    const output = try allocator.alloc(u8, input.len);
+
+    for (input, 0..) |byte, i| {
+        output[i] = std.ascii.toUpper(byte);
+    }
+
+    return output;
+}</code></pre>
+          <p><code>alloc(u8, input.len)</code> requests a mutable byte slice. Allocation can fail, so <code>try</code> propagates errors such as <code>OutOfMemory</code>.</p>
+          <h3>Ownership</h3>
+          <p>Unless an API documents otherwise, the caller owns a returned allocation and must release it with a compatible allocator:</p>
+          <pre><code>const result = try transform(allocator, input);
+defer allocator.free(result);
+
+// Use result here.</code></pre>
+          <div class="callout mistake">
+            <p><strong>Lifetime mistake:</strong> Do not return a slice pointing to a local array. Local storage stops being valid when the function returns. Allocated storage remains valid until its owner frees it.</p>
+          </div>
+          <div class="callout rule">
+            <p><strong>Ownership rule:</strong> The code that receives ownership is responsible for arranging exactly one matching <code>free</code>, usually immediately with <code>defer</code>.</p>
+          </div>
         </div>
       </section>
     </main>

@@ -19,7 +19,7 @@ context-independent answers to future Zig questions.
 | --- | --- |
 | [Raindrops](./raindrops/) | Complete |
 | [Reverse String](./reverse-string/) | Complete |
-| [RNA Transcription](./rna-transcription/) | In progress |
+| [RNA Transcription](./rna-transcription/) | Complete |
 
 ## Running Tests
 
