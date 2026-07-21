@@ -6,10 +6,9 @@ pub fn isArmstrongNumber(num: u128) bool {
     while (temp_num > 0) : (temp_num /= 10) {
         number_of_digits += 1;
     }
-
     var changable_num = num;
     while (changable_num > 0) : (changable_num /= 10) {
-        result += changable_num % 10 ^ number_of_digits;
+        result += std.math.pow(u128, changable_num % 10, number_of_digits);
     }
     return (result == num);
 }

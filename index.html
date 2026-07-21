@@ -328,6 +328,7 @@
       <a href="#testing-errors">13 / Testing errors</a>
       <a href="#struct-literals">14 / Struct literals</a>
       <a href="#tokenizers">15 / Tokenizers</a>
+      <a href="#debug-tests">16 / Debugging tests</a>
     </nav>
 
     <main>
@@ -636,6 +637,24 @@ var tokens = std.mem.tokenizeAny(u8, input, delimiters);
           <p>A two-pass design avoids guessing the output size: count first, allocate exactly once, then fill. Use <code>usize</code> for allocation lengths and slice indexes because it is the native size type used by Zig's memory APIs.</p>
           <div class="callout mistake">
             <p><strong>Uninitialized output:</strong> Allocated bytes initially contain no meaningful values. If a consumed iterator makes the write pass skip every assignment, returning the full allocation exposes those uninitialized bytes.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="debug-tests">
+        <span class="topic-number">QUESTION 16</span>
+        <h2>How do I print debugging information while running tests?</h2>
+        <div class="answer">
+          <p><code>std.debug.print</code> writes formatted output to standard error without requiring an allocator or error handling. Its output appears alongside the normal <code>zig test</code> results:</p>
+          <pre><code>std.debug.print(
+    "input={s}, index={d}, byte={c}\n",
+    .{ input, index, byte },
+);</code></pre>
+          <p>Use <code>{s}</code> for byte strings, <code>{d}</code> for decimal numbers, <code>{c}</code> for characters, and <code>{any}</code> for a general representation. Include labels and a newline so repeated calls remain readable.</p>
+          <p>When inspecting a partially initialized buffer, print only its valid region:</p>
+          <pre><code>std.debug.print("result={s}\n", .{buffer[0..used]});</code></pre>
+          <div class="callout rule">
+            <p><strong>Temporary versus permanent:</strong> Use debug prints to investigate control flow and intermediate values, then remove them. Use <code>std.testing</code> assertions for permanent checks because they produce structured failures.</p>
           </div>
         </div>
       </section>

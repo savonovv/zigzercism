@@ -6,8 +6,8 @@ Zig exercises and practical learning notes collected while working through the
 ## Learning Notes
 
 [`index.html`](./index.html) is a standalone, Kanagawa-themed reference for the
-Zig concepts encountered along the way. It currently covers mutable buffers,
-slices, byte copying, formatting, sequential writes, and string reversal.
+Zig concepts encountered along the way. It covers buffers, slices, allocation,
+numeric types, iteration, testing, tokenization, and debugging.
 
 The project-local OpenCode skill in
 `.opencode/skills/update-zig-notes/` keeps the reference updated with durable,
@@ -20,6 +20,14 @@ context-independent answers to future Zig questions.
 | [Raindrops](./raindrops/) | Complete |
 | [Reverse String](./reverse-string/) | Complete |
 | [RNA Transcription](./rna-transcription/) | Complete |
+| [Scrabble Score](./scrabble-score/) | Complete |
+| [Space Age](./space-age/) | Complete |
+| [Sum of Multiples](./sum-of-multiples/) | Complete |
+| [Triangle](./triangle/) | Complete |
+| [Two Fer](./two-fer/) | Complete |
+| [Acronym](./acronym/) | Complete |
+| [Armstrong Numbers](./armstrong-numbers/) | Complete |
+| [Collatz Conjecture](./collatz-conjecture/) | In progress |
 
 ## Running Tests
 
