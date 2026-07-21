@@ -325,6 +325,8 @@
       <a href="#enum-data">10 / Enum data</a>
       <a href="#float-conversion">11 / Float conversion</a>
       <a href="#loop-order">12 / Loop order</a>
+      <a href="#testing-errors">13 / Testing errors</a>
+      <a href="#struct-literals">14 / Struct literals</a>
     </nav>
 
     <main>
@@ -569,6 +571,42 @@ const average = count_float / 3.0;</code></pre>
           <p>The tradeoff is time: checking every item against several rules takes work proportional to the number of items times the number of rules. Generating items rule by rule can do less work, but overlapping results then require deduplication, such as a set or a problem-specific mathematical method.</p>
           <div class="callout mistake">
             <p><strong>Range boundary:</strong> Zig ranges are ascending and end-exclusive. A runtime range such as <code>1..0</code> is not an empty descending range and can overflow while iterating. Represent the empty case without placing a larger start before a smaller unsigned end.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="testing-errors">
+        <span class="topic-number">QUESTION 13</span>
+        <h2>How do I test that a function returns an expected error?</h2>
+        <div class="answer">
+          <p>Pass the function's unresolved error union directly to <code>std.testing.expectError</code>:</p>
+          <pre><code>try std.testing.expectError(
+    error.Invalid,
+    parseValue(input),
+);</code></pre>
+          <p>Do not put <code>try</code> around <code>parseValue(input)</code>. That would propagate the expected error before <code>expectError</code> could inspect it. The outer <code>try</code> instead handles the assertion's own result: the test fails if the call succeeds or returns a different error.</p>
+          <div class="callout rule">
+            <p><strong>Mental model:</strong> Give <code>expectError</code> the unopened error union. Let the helper verify which branch and which error it contains.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="struct-literals">
+        <span class="topic-number">QUESTION 14</span>
+        <h2>When can I omit a struct's type name?</h2>
+        <div class="answer">
+          <p>When the expected type is already known from context, begin a struct literal with <code>.{</code> instead of repeating its type:</p>
+          <pre><code>const Point = struct {
+    x: f64,
+    y: f64,
+};
+
+fn origin() Point {
+    return .{ .x = 0, .y = 0 };
+}</code></pre>
+          <p>The function's return type tells Zig that the literal is a <code>Point</code>. The same inference works in other contexts with a known expected type.</p>
+          <div class="callout rule">
+            <p><strong>Named fields remain required:</strong> Ordinary structs do not support positional initialization. Write <code>.x = value</code>, not just <code>value</code>.</p>
           </div>
         </div>
       </section>
