@@ -327,6 +327,7 @@
       <a href="#loop-order">12 / Loop order</a>
       <a href="#testing-errors">13 / Testing errors</a>
       <a href="#struct-literals">14 / Struct literals</a>
+      <a href="#tokenizers">15 / Tokenizers</a>
     </nav>
 
     <main>
@@ -395,11 +396,11 @@ return initialized;</code></pre>
         <h2>Why are buffer-formatting operations fallible?</h2>
         <div class="answer">
           <p>A formatting function can run out of space, so it returns an error union such as <code>error{NoSpaceLeft}![]u8</code>. A function returning plain <code>[]const u8</code> must handle that error first.</p>
-          <pre><code>const result = try std.mem.print(buffer, "{}", .{value});
+          <pre><code>const result = try std.fmt.bufPrint(buffer, "{d}", .{value});
 return result;</code></pre>
           <p>Use <code>try</code> when the surrounding function can return the error. Use <code>catch</code> when it must recover, translate the error, or when a proven size invariant makes failure impossible.</p>
           <div class="callout rule">
-            <p><strong>Version note:</strong> Standard-library formatting names can differ between Zig versions. Check the documentation for the version used by the project.</p>
+            <p><strong>Version note:</strong> <code>std.fmt.bufPrint</code> is the buffer-formatting API in Zig 0.16. Standard-library names can differ between Zig versions.</p>
           </div>
         </div>
       </section>
@@ -607,6 +608,34 @@ fn origin() Point {
           <p>The function's return type tells Zig that the literal is a <code>Point</code>. The same inference works in other contexts with a known expected type.</p>
           <div class="callout rule">
             <p><strong>Named fields remain required:</strong> Ordinary structs do not support positional initialization. Write <code>.x = value</code>, not just <code>value</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="tokenizers">
+        <span class="topic-number">QUESTION 15</span>
+        <h2>How do I tokenize input and allocate an exact-size result?</h2>
+        <div class="answer">
+          <p><code>std.mem.tokenizeAny</code> treats any byte in its delimiter slice as a separator and skips empty tokens created by repeated delimiters:</p>
+          <pre><code>var iterator = std.mem.tokenizeAny(u8, input, " \t-_");
+
+while (iterator.next()) |token| {
+    // token is a non-empty []const u8.
+}</code></pre>
+          <p><code>next()</code> returns <code>?[]const u8</code>, not <code>bool</code>. Optional capture unwraps each token and ends the loop when the iterator returns <code>null</code>.</p>
+          <h3>State and allocation</h3>
+          <p>Token iterators are stateful and one-way. After one loop reaches the end, a second loop over the same iterator receives nothing. Recreate the tokenizer when using two passes:</p>
+          <pre><code>var counter = std.mem.tokenizeAny(u8, input, delimiters);
+var count: usize = 0;
+while (counter.next()) |_| count += 1;
+
+const output = try allocator.alloc(u8, count);
+
+var tokens = std.mem.tokenizeAny(u8, input, delimiters);
+// Fill output from tokens.</code></pre>
+          <p>A two-pass design avoids guessing the output size: count first, allocate exactly once, then fill. Use <code>usize</code> for allocation lengths and slice indexes because it is the native size type used by Zig's memory APIs.</p>
+          <div class="callout mistake">
+            <p><strong>Uninitialized output:</strong> Allocated bytes initially contain no meaningful values. If a consumed iterator makes the write pass skip every assignment, returning the full allocation exposes those uninitialized bytes.</p>
           </div>
         </div>
       </section>
