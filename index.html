@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="General Zig notes about buffers, slices, strings, and memory.">
+  <meta name="description" content="General Zig notes about buffers, slices, strings, memory, enums, and numeric types.">
   <title>Zig Field Notes</title>
   <style>
     :root {
@@ -307,7 +307,7 @@
   <header>
     <p class="eyebrow">A growing Zig Q&amp;A</p>
     <h1>Zig Field Notes</h1>
-    <p>Reusable mental models for buffers, slices, strings, and memory, with examples that stand on their own.</p>
+    <p>Reusable mental models for buffers, slices, strings, memory, and numeric types, with examples that stand on their own.</p>
   </header>
 
   <div class="layout">
@@ -322,6 +322,8 @@
       <a href="#reverse">07 / Reversing strings</a>
       <a href="#choosing">08 / Choosing a method</a>
       <a href="#allocators">09 / Allocators</a>
+      <a href="#enum-data">10 / Enum data</a>
+      <a href="#float-conversion">11 / Float conversion</a>
     </nav>
 
     <main>
@@ -502,6 +504,48 @@ defer allocator.free(result);
           </div>
           <div class="callout rule">
             <p><strong>Ownership rule:</strong> The code that receives ownership is responsible for arranging exactly one matching <code>free</code>, usually immediately with <code>defer</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="enum-data">
+        <span class="topic-number">QUESTION 10</span>
+        <h2>How do I associate numeric data with enum values?</h2>
+        <div class="answer">
+          <p>An enum represents a closed set of identities. Its backing values must be integers, so an enum cannot directly store a floating-point coefficient. Keep the identity in the enum and map each tag to its data with a method and a <code>switch</code> expression:</p>
+          <pre><code>const Tier = enum {
+    basic,
+    premium,
+
+    fn coefficient(self: Tier) f64 {
+        return switch (self) {
+            .basic =&gt; 1.0,
+            .premium =&gt; 1.5,
+        };
+    }
+};</code></pre>
+          <p>A <code>switch</code> returns one value for one input. To process a slice or string, use a loop and evaluate the switch once per element. Multiple cases can share one result, such as <code>'a', 'e' =&gt; 1</code>.</p>
+          <div class="callout rule">
+            <p><strong>Exhaustiveness:</strong> Zig requires every possible enum tag to be handled. Adding a new tag therefore points directly to mappings that need updating.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="float-conversion">
+        <span class="topic-number">QUESTION 11</span>
+        <h2>Why does integer-to-float calculation order matter?</h2>
+        <div class="answer">
+          <p>Zig does not implicitly mix integer and floating-point types. Convert an integer explicitly with <code>@floatFromInt</code>, giving the result a concrete float type:</p>
+          <pre><code>const count: usize = 95;
+const count_float: f64 = @floatFromInt(count);
+const average = count_float / 3.0;</code></pre>
+          <p>Convert before division when the fractional part matters. In <code>@floatFromInt(count / 3)</code>, integer division happens first, so the fraction is already lost before conversion.</p>
+          <h3>Precision versus formatting</h3>
+          <p>An <code>f64</code> does not store a fixed number of decimal digits. Output formatting controls only how the value is displayed:</p>
+          <pre><code>std.debug.print("{d:.2}\n", .{average});</code></pre>
+          <p>This prints two digits after the decimal point but does not change <code>average</code>. When testing a calculated float, compare it with a tolerance using <code>std.testing.expectApproxEqAbs</code> instead of formatting it or expecting exact equality.</p>
+          <div class="callout mistake">
+            <p><strong>Common mistake:</strong> Converting after integer arithmetic changes the result's type, but it cannot restore a fractional part that integer division already discarded.</p>
           </div>
         </div>
       </section>
