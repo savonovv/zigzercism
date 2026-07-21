@@ -27,7 +27,9 @@ context-independent answers to future Zig questions.
 | [Two Fer](./two-fer/) | Complete |
 | [Acronym](./acronym/) | Complete |
 | [Armstrong Numbers](./armstrong-numbers/) | Complete |
-| [Collatz Conjecture](./collatz-conjecture/) | In progress |
+| [Collatz Conjecture](./collatz-conjecture/) | Complete |
+| [Darts](./darts/) | Complete |
+| [Difference of Squares](./difference-of-squares/) | In progress |
 
 ## Running Tests
 

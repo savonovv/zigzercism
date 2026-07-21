@@ -329,6 +329,7 @@
       <a href="#struct-literals">14 / Struct literals</a>
       <a href="#tokenizers">15 / Tokenizers</a>
       <a href="#debug-tests">16 / Debugging tests</a>
+      <a href="#squared-distance">17 / Squared distance</a>
     </nav>
 
     <main>
@@ -655,6 +656,30 @@ var tokens = std.mem.tokenizeAny(u8, input, delimiters);
           <pre><code>std.debug.print("result={s}\n", .{buffer[0..used]});</code></pre>
           <div class="callout rule">
             <p><strong>Temporary versus permanent:</strong> Use debug prints to investigate control flow and intermediate values, then remove them. Use <code>std.testing</code> assertions for permanent checks because they produce structured failures.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="squared-distance">
+        <span class="topic-number">QUESTION 17</span>
+        <h2>How can I compare distances without calculating a square root?</h2>
+        <div class="answer">
+          <p>When only the ordering of Euclidean distances matters, compare squared values. Squaring preserves the order of non-negative distances, so the square root is unnecessary:</p>
+          <pre><code>const distance_squared = x * x + y * y;
+const radius_squared = radius * radius;
+
+if (distance_squared &lt;= radius_squared) {
+    // The point is inside or on the circle.
+}</code></pre>
+          <p>Direct multiplication is also clearer than a generic power function when the exponent is exactly two. This avoids both <code>sqrt</code> and <code>pow</code> while preserving boundary comparisons.</p>
+          <h3>Flatten classifications with early returns</h3>
+          <p>When checking ordered thresholds, test them from the most restrictive outside case toward the inside and return immediately:</p>
+          <pre><code>if (value &gt; largest_limit) return outside;
+if (value &gt; middle_limit) return outer_band;
+if (value &gt; smallest_limit) return middle_band;
+return inner_band;</code></pre>
+          <div class="callout rule">
+            <p><strong>Why it helps:</strong> Early returns remove unnecessary <code>else</code> nesting, and squared comparisons avoid computing a value that the classification does not need.</p>
           </div>
         </div>
       </section>
