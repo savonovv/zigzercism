@@ -324,6 +324,7 @@
       <a href="#allocators">09 / Allocators</a>
       <a href="#enum-data">10 / Enum data</a>
       <a href="#float-conversion">11 / Float conversion</a>
+      <a href="#loop-order">12 / Loop order</a>
     </nav>
 
     <main>
@@ -479,7 +480,7 @@ return buffer[0..source.len];</code></pre>
         <span class="topic-number">QUESTION 09</span>
         <h2>Why does a function need an allocator?</h2>
         <div class="answer">
-          <p>A function needs an allocator when it must create data whose size is known at runtime and whose lifetime must continue after the function returns. The allocator is an interface for requesting and releasing memory; it is not the memory itself.</p>
+          <p>A function needs an allocator when it must create runtime-sized data, whether that data is temporary or returned to the caller. The allocator is an interface for requesting and releasing memory; it is not the memory itself.</p>
           <pre><code>fn transform(
     allocator: std.mem.Allocator,
     input: []const u8,
@@ -493,6 +494,7 @@ return buffer[0..source.len];</code></pre>
     return output;
 }</code></pre>
           <p><code>alloc(u8, input.len)</code> requests a mutable byte slice. Allocation can fail, so <code>try</code> propagates errors such as <code>OutOfMemory</code>.</p>
+          <p>Temporary collections can also use an allocator and free their storage before the function returns. Dynamic containers request more memory as they grow, so the caller does not need to know their final size. If an implementation needs no dynamic storage, an allocator parameter may remain unused.</p>
           <h3>Ownership</h3>
           <p>Unless an API documents otherwise, the caller owns a returned allocation and must release it with a compatible allocator:</p>
           <pre><code>const result = try transform(allocator, input);
@@ -524,7 +526,7 @@ defer allocator.free(result);
         };
     }
 };</code></pre>
-          <p>A <code>switch</code> returns one value for one input. To process a slice or string, use a loop and evaluate the switch once per element. Multiple cases can share one result, such as <code>'a', 'e' =&gt; 1</code>.</p>
+          <p>A <code>switch</code> returns one value for one input. Its cases must be known at compile time, so runtime values from a slice belong in a loop rather than dynamically generated switch cases. Multiple fixed cases can share one result, such as <code>'a', 'e' =&gt; 1</code>.</p>
           <div class="callout rule">
             <p><strong>Exhaustiveness:</strong> Zig requires every possible enum tag to be handled. Adding a new tag therefore points directly to mappings that need updating.</p>
           </div>
@@ -546,6 +548,27 @@ const average = count_float / 3.0;</code></pre>
           <p>This prints two digits after the decimal point but does not change <code>average</code>. When testing a calculated float, compare it with a tolerance using <code>std.testing.expectApproxEqAbs</code> instead of formatting it or expecting exact equality.</p>
           <div class="callout mistake">
             <p><strong>Common mistake:</strong> Converting after integer arithmetic changes the result's type, but it cannot restore a fractional part that integer division already discarded.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="loop-order">
+        <span class="topic-number">QUESTION 12</span>
+        <h2>How can loop order prevent duplicate counting?</h2>
+        <div class="answer">
+          <p>When several rules can select the same item, iterating by rule can generate that item more than once. Iterating by item instead gives each item one opportunity to contribute:</p>
+          <pre><code>outer: for (items) |item| {
+    for (rules) |rule| {
+        if (matches(item, rule)) {
+            total += item;
+            continue :outer;
+        }
+    }
+}</code></pre>
+          <p>The labeled <code>continue</code> stops checking rules after the first match and advances the outer loop. This uses constant extra memory because no set of previously seen items is needed.</p>
+          <p>The tradeoff is time: checking every item against several rules takes work proportional to the number of items times the number of rules. Generating items rule by rule can do less work, but overlapping results then require deduplication, such as a set or a problem-specific mathematical method.</p>
+          <div class="callout mistake">
+            <p><strong>Range boundary:</strong> Zig ranges are ascending and end-exclusive. A runtime range such as <code>1..0</code> is not an empty descending range and can overflow while iterating. Represent the empty case without placing a larger start before a smaller unsigned end.</p>
           </div>
         </div>
       </section>
