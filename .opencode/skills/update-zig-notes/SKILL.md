@@ -27,4 +27,7 @@ Maintain `/home/gorilla/projects/zig/index.html` as the user's concise Zig learn
 - Keep examples focused; do not insert complete Exercism solutions unless the user has already completed them or explicitly requests one.
 - Avoid exercise names, fixed values, and copied test output unless they are essential to the concept.
 - Do not add dates, progress counters, or generated metadata that creates maintenance noise.
-- Do not alter exercise source files while updating the notes unless the user separately requests code changes.
+- Never alter exercise source files while teaching, answering questions, diagnosing errors, reviewing solutions, updating notes, or preparing a commit.
+- Treat suggestions and discovered issues as feedback only. Do not turn them into source edits.
+- Only edit exercise source when the user explicitly asks to implement a specific change. Requests such as "update the repo", "update the notes", or "commit" do not grant permission to change exercise code.
+- If it is unclear whether the user wants an explanation or an implementation, ask before editing.
