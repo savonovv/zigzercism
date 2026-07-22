@@ -333,6 +333,7 @@
       <a href="#integer-digits">18 / Integer digits</a>
       <a href="#closed-forms">19 / Closed forms</a>
       <a href="#hash-maps">20 / Hash maps</a>
+      <a href="#slice-aggregates">21 / Slice aggregates</a>
     </nav>
 
     <main>
@@ -702,6 +703,7 @@ while (value &gt; 0) : (value /= 10) {
           <p>Zig has no numeric exponentiation operator. In Zig 0.16, <code>std.math.pow</code> computes a numeric power. The <code>**</code> operator repeats arrays and therefore expects a compile-time-known repetition count.</p>
           <p>Bit shifting is different: for an integer result that fits, <code>x &lt;&lt; n</code> multiplies by <code>2^n</code>. Thus <code>x &lt;&lt; 1</code> doubles and <code>x &lt;&lt; 2</code> multiplies by four; neither operation squares <code>x</code>. Floating-point values cannot be shifted.</p>
           <p>To process an integer one binary digit at a time, mask the lowest bit with <code>value &amp; 1</code>, then remove it with <code>value &gt;&gt;= 1</code>. This is the base-two analogue of reading a decimal digit with remainder by ten and removing it with division by ten.</p>
+          <p>For a runtime shift, give the left operand a fixed-width integer type and validate the shift amount before subtracting or shifting. A geometric sequence that fills every bit of an unsigned type sums to that type's maximum value: <code>std.math.maxInt(u64)</code> is <code>2^64 - 1</code> without attempting to represent the out-of-range value <code>2^64</code>.</p>
           <div class="callout rule">
             <p><strong>Type rule:</strong> Keep accumulators wide enough for the input domain. A <code>usize</code> accumulator is not sufficient for calculations over arbitrary <code>u128</code> values.</p>
           </div>
@@ -744,6 +746,27 @@ while (iterator.next()) |entry| {
           <p>A map grows automatically, so counting input first is not required. If the final entry count is already known cheaply and the map is large, <code>ensureTotalCapacity</code> can reserve space before insertion. A separate counting pass is a tradeoff: it may reduce reallocations but adds another full traversal.</p>
           <div class="callout rule">
             <p><strong>Optimization rule:</strong> For small maps, prefer one clear insertion pass. Reserve capacity when scale or measurement justifies the extra logic.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="slice-aggregates">
+        <span class="topic-number">QUESTION 21</span>
+        <h2>Do I need to store a slice's size separately?</h2>
+        <div class="answer">
+          <p>No. A slice stores a pointer and a length, available as <code>slice.len</code>. A separate size field duplicates state and can become inconsistent.</p>
+          <p>Check for an empty slice before indexing its last element or using an aggregate that requires data:</p>
+          <pre><code>if (values.len == 0) return null;
+
+const latest = values[values.len - 1];
+const greatest = std.mem.max(i32, values);</code></pre>
+          <p>In Zig 0.16, <code>std.mem.max</code> scans a non-empty slice in linear time and performs no allocation. For pairwise processing, a multi-sequence loop traverses equal-length slices in lockstep:</p>
+          <pre><code>for (left, right) |a, b| {
+    if (a != b) differences += 1;
+}</code></pre>
+          <p>Validate equal lengths before the loop. This gives <code>O(n)</code> time and <code>O(1)</code> extra space, which is optimal when every pair must be examined.</p>
+          <div class="callout mistake">
+            <p><strong>Lifetime rule:</strong> Do not return a slice into a local array created inside the function. Returned slices must refer to storage that remains alive, such as caller-owned input, struct-owned storage, or an allocation transferred to the caller.</p>
           </div>
         </div>
       </section>
