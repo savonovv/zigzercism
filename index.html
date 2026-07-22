@@ -332,6 +332,7 @@
       <a href="#squared-distance">17 / Squared distance</a>
       <a href="#integer-digits">18 / Integer digits</a>
       <a href="#closed-forms">19 / Closed forms</a>
+      <a href="#hash-maps">20 / Hash maps</a>
     </nav>
 
     <main>
@@ -700,6 +701,7 @@ while (value &gt; 0) : (value /= 10) {
           <h3>Powers and shifts</h3>
           <p>Zig has no numeric exponentiation operator. In Zig 0.16, <code>std.math.pow</code> computes a numeric power. The <code>**</code> operator repeats arrays and therefore expects a compile-time-known repetition count.</p>
           <p>Bit shifting is different: for an integer result that fits, <code>x &lt;&lt; n</code> multiplies by <code>2^n</code>. Thus <code>x &lt;&lt; 1</code> doubles and <code>x &lt;&lt; 2</code> multiplies by four; neither operation squares <code>x</code>. Floating-point values cannot be shifted.</p>
+          <p>To process an integer one binary digit at a time, mask the lowest bit with <code>value &amp; 1</code>, then remove it with <code>value &gt;&gt;= 1</code>. This is the base-two analogue of reading a decimal digit with remainder by ten and removing it with division by ten.</p>
           <div class="callout rule">
             <p><strong>Type rule:</strong> Keep accumulators wide enough for the input domain. A <code>usize</code> accumulator is not sufficient for calculations over arbitrary <code>u128</code> values.</p>
           </div>
@@ -717,6 +719,31 @@ const sum_of_squares = n * (n + 1) * (2 * n + 1) / 6;</code></pre>
           <p>Name intermediate values so the code preserves the mathematical distinction between a sum and the square of that sum. Returning <code>sum</code> where <code>sum * sum</code> is required can also make later unsigned subtraction underflow.</p>
           <div class="callout mistake">
             <p><strong>Overflow tradeoff:</strong> Constant-time formulas may create large intermediate products. Divide factors before multiplication where algebra permits, or use a wider checked type when the input range requires it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="hash-maps">
+        <span class="topic-number">QUESTION 20</span>
+        <h2>How do I initialize, iterate, and return an AutoHashMap?</h2>
+        <div class="answer">
+          <p>An <code>AutoHashMap</code> manages its own dynamic storage. Initialize one map with an allocator; <code>allocator.alloc(Map, count)</code> would instead create a slice of map objects:</p>
+          <pre><code>var result = std.AutoHashMap(u8, u32).init(allocator);
+errdefer result.deinit();</code></pre>
+          <p>Insertion can allocate, so <code>put</code> is fallible. The <code>errdefer</code> cleans up partial construction if an insertion fails, but does not run when ownership is successfully returned to the caller.</p>
+          <h3>Iteration</h3>
+          <p>An iterator must be mutable because <code>next()</code> advances its cursor. Entries expose pointers to their stored key and value:</p>
+          <pre><code>var iterator = map.iterator();
+while (iterator.next()) |entry| {
+    const key = entry.key_ptr.*;
+    const value = entry.value_ptr.*;
+}</code></pre>
+          <p>Iteration order is unspecified. Do not insert or remove entries through the map while its iterator is active.</p>
+          <h3>Ownership and capacity</h3>
+          <p>Use ordinary <code>defer map.deinit()</code> in the scope that owns and consumes the map, so cleanup also runs when a later operation fails. Use <code>errdefer</code> while constructing a value that will be transferred on success.</p>
+          <p>A map grows automatically, so counting input first is not required. If the final entry count is already known cheaply and the map is large, <code>ensureTotalCapacity</code> can reserve space before insertion. A separate counting pass is a tradeoff: it may reduce reallocations but adds another full traversal.</p>
+          <div class="callout rule">
+            <p><strong>Optimization rule:</strong> For small maps, prefer one clear insertion pass. Reserve capacity when scale or measurement justifies the extra logic.</p>
           </div>
         </div>
       </section>
