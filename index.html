@@ -330,6 +330,8 @@
       <a href="#tokenizers">15 / Tokenizers</a>
       <a href="#debug-tests">16 / Debugging tests</a>
       <a href="#squared-distance">17 / Squared distance</a>
+      <a href="#integer-digits">18 / Integer digits</a>
+      <a href="#closed-forms">19 / Closed forms</a>
     </nav>
 
     <main>
@@ -680,6 +682,41 @@ if (value &gt; smallest_limit) return middle_band;
 return inner_band;</code></pre>
           <div class="callout rule">
             <p><strong>Why it helps:</strong> Early returns remove unnecessary <code>else</code> nesting, and squared comparisons avoid computing a value that the classification does not need.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="integer-digits">
+        <span class="topic-number">QUESTION 18</span>
+        <h2>How do I process decimal digits and integer powers?</h2>
+        <div class="answer">
+          <p>When the input is already an integer, no tokenizer is needed. Remainder by ten reads the last decimal digit, and integer division by ten removes it:</p>
+          <pre><code>var value = original;
+while (value &gt; 0) : (value /= 10) {
+    const digit = value % 10;
+    // Use digit here.
+}</code></pre>
+          <p>Use a mutable copy so the original remains available after the loop. Handle zero deliberately because the loop body does not run when the initial value is zero.</p>
+          <h3>Powers and shifts</h3>
+          <p>Zig has no numeric exponentiation operator. In Zig 0.16, <code>std.math.pow</code> computes a numeric power. The <code>**</code> operator repeats arrays and therefore expects a compile-time-known repetition count.</p>
+          <p>Bit shifting is different: for an integer result that fits, <code>x &lt;&lt; n</code> multiplies by <code>2^n</code>. Thus <code>x &lt;&lt; 1</code> doubles and <code>x &lt;&lt; 2</code> multiplies by four; neither operation squares <code>x</code>. Floating-point values cannot be shifted.</p>
+          <div class="callout rule">
+            <p><strong>Type rule:</strong> Keep accumulators wide enough for the input domain. A <code>usize</code> accumulator is not sufficient for calculations over arbitrary <code>u128</code> values.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="closed-forms">
+        <span class="topic-number">QUESTION 19</span>
+        <h2>When should I replace a loop with a closed-form formula?</h2>
+        <div class="answer">
+          <p>A loop is often the clearest first implementation. When a well-known formula exists, it can reduce work from linear time to constant time:</p>
+          <pre><code>const sum = n * (n + 1) / 2;
+const square_of_sum = sum * sum;
+const sum_of_squares = n * (n + 1) * (2 * n + 1) / 6;</code></pre>
+          <p>Name intermediate values so the code preserves the mathematical distinction between a sum and the square of that sum. Returning <code>sum</code> where <code>sum * sum</code> is required can also make later unsigned subtraction underflow.</p>
+          <div class="callout mistake">
+            <p><strong>Overflow tradeoff:</strong> Constant-time formulas may create large intermediate products. Divide factors before multiplication where algebra permits, or use a wider checked type when the input range requires it.</p>
           </div>
         </div>
       </section>
