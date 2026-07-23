@@ -2,9 +2,8 @@
 
 ## Current Checkpoint
 
-The fixed array has capacity for three scores, but capacity is not the same as
-the number of initialized entries. The current implementation still needs to
-maintain this invariant:
+The completed implementation separates the fixed array's capacity from the
+number of initialized entries and maintains this invariant:
 
 ```text
 high_scores[0..top_len] is initialized and sorted descending.
@@ -106,3 +105,11 @@ insert 30 at 0
 
 The returned slice is only `high_scores[0..top_len]`; unused slots are never
 exposed.
+
+## Complexity
+
+For a capacity of `k`, each input searches at most `k` initialized entries and
+shifts at most `k - 1` entries. Processing `n` scores therefore takes `O(n * k)`
+time and `O(k)` storage. Here `k` is fixed at three, so this simplifies to
+`O(n)` time and `O(1)` extra storage. Every input must be inspected because the
+last score could still belong in the result.

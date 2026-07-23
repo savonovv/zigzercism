@@ -34,7 +34,7 @@ context-independent answers to future Zig questions.
 | [ETL](./etl/) | Complete |
 | [Grains](./grains/) | Complete |
 | [Hamming](./hamming/) | Complete |
-| [High Scores](./high-scores/) | In progress |
+| [High Scores](./high-scores/) | Complete |
 
 ## Running Tests
 

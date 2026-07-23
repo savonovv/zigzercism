@@ -795,6 +795,7 @@ values[insert_at] = item;</code></pre>
           <div class="callout rule">
             <p><strong>Invariant:</strong> <code>values[0..used]</code> is initialized and sorted. <code>values[used..values.len]</code> is never read. The logical length never exceeds capacity.</p>
           </div>
+          <p>For capacity <code>k</code> and <code>n</code> inputs, bounded insertion takes <code>O(n * k)</code> time and <code>O(k)</code> storage. When <code>k</code> is a fixed small constant, such as three, that is <code>O(n)</code> time and <code>O(1)</code> extra storage.</p>
         </div>
       </section>
     </main>

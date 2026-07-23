@@ -1,36 +1,38 @@
 const std = @import("std");
 
 pub const HighScores = struct {
-    // This struct, as well as its fields and methods, needs to be implemented.
     scores: []const i32,
     high_scores: [3]i32,
-    hish_scores_len: usize,
+    high_scores_len: usize,
 
     pub fn init(scores: []const i32) HighScores {
         var high_scores_len: usize = 0;
         var high_scores: [3]i32 = undefined;
-        const MAX_HIGH_SCORE_LEN = 3;
 
-        var i: usize = 0;
         for (scores) |score| {
-            while (i < MAX_HIGH_SCORE_LEN) : (i += 1) {
+            var i: usize = 0;
+            var insert_at = high_scores_len;
+
+            while (i < high_scores_len) : (i += 1) {
                 if (score > high_scores[i]) {
-                    if (i + 1 < high_scores_len) {
-                        var j = high_scores_len - 1;
-                        while (j > i) : (j -= 1) {
-                            high_scores[j] = high_scores[j - 1];
-                        }
-                        high_scores[i] = score;
-                        high_scores_len += 1;
-                        break;
-                    }
-                    high_scores[i] = score;
-                    high_scores_len += 1;
+                    insert_at = i;
+                    break;
                 }
             }
-            i = 0;
+
+            if (insert_at == high_scores.len) continue;
+
+            const new_len = @min(high_scores_len + 1, high_scores.len);
+            var j = new_len - 1;
+
+            while (j > insert_at) : (j -= 1) {
+                high_scores[j] = high_scores[j - 1];
+            }
+
+            high_scores[insert_at] = score;
+            high_scores_len = new_len;
         }
-        return .{ .scores = scores, .high_scores = high_scores, .hish_scores_len = high_scores_len };
+        return .{ .scores = scores, .high_scores = high_scores, .high_scores_len = high_scores_len };
     }
 
     pub fn latest(self: *const HighScores) ?i32 {
@@ -44,6 +46,6 @@ pub const HighScores = struct {
     }
 
     pub fn personalTopThree(self: *const HighScores) []const i32 {
-        return self.high_scores[0..self.hish_scores_len];
+        return self.high_scores[0..self.high_scores_len];
     }
 };
