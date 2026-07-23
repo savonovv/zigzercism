@@ -334,6 +334,7 @@
       <a href="#closed-forms">19 / Closed forms</a>
       <a href="#hash-maps">20 / Hash maps</a>
       <a href="#slice-aggregates">21 / Slice aggregates</a>
+      <a href="#bounded-insertion">22 / Bounded insertion</a>
     </nav>
 
     <main>
@@ -767,6 +768,32 @@ const greatest = std.mem.max(i32, values);</code></pre>
           <p>Validate equal lengths before the loop. This gives <code>O(n)</code> time and <code>O(1)</code> extra space, which is optimal when every pair must be examined.</p>
           <div class="callout mistake">
             <p><strong>Lifetime rule:</strong> Do not return a slice into a local array created inside the function. Returned slices must refer to storage that remains alive, such as caller-owned input, struct-owned storage, or an allocation transferred to the caller.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="bounded-insertion">
+        <span class="topic-number">QUESTION 22</span>
+        <h2>How do I keep a sorted top-k result in a fixed array?</h2>
+        <div class="answer">
+          <p>A fixed array has a compile-time capacity, not a runtime empty state. Pair it with a logical length:</p>
+          <pre><code>var values: [capacity]i32 = undefined;
+var used: usize = 0;</code></pre>
+          <p>Only <code>values[0..used]</code> is initialized. Search that prefix for the insertion position; use <code>values.len</code> only as the physical capacity. After deciding that an item belongs, compute the new length, shift the affected tail right, insert once, and update <code>used</code>.</p>
+          <h3>Backward shift</h3>
+          <p>To insert <code>100</code> at index zero in <code>[90, 70, 30]</code>, copy from the back so no unread value is overwritten:</p>
+          <pre><code>90  70  30
+90  70  70  // copy index 1 to index 2
+90  90  70  // copy index 0 to index 1
+100 90  70  // write the new value at index 0</code></pre>
+          <pre><code>var j = new_len - 1;
+while (j &gt; insert_at) : (j -= 1) {
+    values[j] = values[j - 1];
+}
+values[insert_at] = item;</code></pre>
+          <p>Changing <code>j</code> only moves the cursor; the assignment in the loop body moves the data. A forward shift would overwrite the source for the next copy.</p>
+          <div class="callout rule">
+            <p><strong>Invariant:</strong> <code>values[0..used]</code> is initialized and sorted. <code>values[used..values.len]</code> is never read. The logical length never exceeds capacity.</p>
           </div>
         </div>
       </section>

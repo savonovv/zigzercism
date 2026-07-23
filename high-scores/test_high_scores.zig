@@ -15,7 +15,7 @@ test "Personal best" {
 }
 
 test "Top 3 scores-Personal top three from a list of scores" {
-    const scores = &[_]i32{ 10, 30, 90, 30, 100, 20, 10, 0, 30, 40, 40, 70, 70 };
+    const scores = &[_]i32{ 10, 30, 90, 30, 20, 10, 0, 30, 40, 40, 70, 70, 100 };
     try testing.expectEqualSlices(i32, &[_]i32{ 100, 90, 70 }, HighScores.init(scores).personalTopThree());
 }
 
