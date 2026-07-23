@@ -29,7 +29,11 @@ context-independent answers to future Zig questions.
 | [Armstrong Numbers](./armstrong-numbers/) | Complete |
 | [Collatz Conjecture](./collatz-conjecture/) | Complete |
 | [Darts](./darts/) | Complete |
-| [Difference of Squares](./difference-of-squares/) | In progress |
+| [Difference of Squares](./difference-of-squares/) | Complete |
+| [Eliud's Eggs](./eliuds-eggs/) | Complete |
+| [ETL](./etl/) | Complete |
+| [Grains](./grains/) | Complete |
+| [Hamming](./hamming/) | Complete |
 
 ## Running Tests
 
