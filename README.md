@@ -35,6 +35,9 @@ context-independent answers to future Zig questions.
 | [Grains](./grains/) | Complete |
 | [Hamming](./hamming/) | Complete |
 | [High Scores](./high-scores/) | Complete |
+| [Resistor Color](./resistor-color/) | Complete |
+| [Resistor Color Duo](./resistor-color-duo/) | Complete |
+| [Resistor Color Trio](./resistor-color-trio/) | Complete |
 
 ## Running Tests
 

@@ -335,6 +335,7 @@
       <a href="#hash-maps">20 / Hash maps</a>
       <a href="#slice-aggregates">21 / Slice aggregates</a>
       <a href="#bounded-insertion">22 / Bounded insertion</a>
+      <a href="#metric-labels">23 / Metric labels</a>
     </nav>
 
     <main>
@@ -405,6 +406,8 @@ return initialized;</code></pre>
           <p>A formatting function can run out of space, so it returns an error union such as <code>error{NoSpaceLeft}![]u8</code>. A function returning plain <code>[]const u8</code> must handle that error first.</p>
           <pre><code>const result = try std.fmt.bufPrint(buffer, "{d}", .{value});
 return result;</code></pre>
+          <p>When the function should allocate the formatted result, Zig 0.16 provides <code>std.fmt.allocPrint(allocator, format, args)</code>. It calculates the required size, allocates once, writes the text, and transfers the returned slice to the caller.</p>
+          <p>Use <code>{d}</code> for decimal integers and floats. Default float formatting omits an unnecessary trailing <code>.0</code>. The <code>{f}</code> specifier delegates to a value's custom <code>format</code> method; it is not the general float specifier.</p>
           <p>Use <code>try</code> when the surrounding function can return the error. Use <code>catch</code> when it must recover, translate the error, or when a proven size invariant makes failure impossible.</p>
           <div class="callout rule">
             <p><strong>Version note:</strong> <code>std.fmt.bufPrint</code> is the buffer-formatting API in Zig 0.16. Standard-library names can differ between Zig versions.</p>
@@ -537,6 +540,16 @@ defer allocator.free(result);
     }
 };</code></pre>
           <p>A <code>switch</code> returns one value for one input. Its cases must be known at compile time, so runtime values from a slice belong in a loop rather than dynamically generated switch cases. Multiple fixed cases can share one result, such as <code>'a', 'e' =&gt; 1</code>.</p>
+          <h3>Inferred literals and enumeration</h3>
+          <p>When context already expects an enum type, a leading-dot literal omits the repeated type name. A function parameter of type <code>Status</code> lets <code>setStatus(.busy)</code> mean <code>setStatus(Status.busy)</code>. Without an expected type, write the qualified form.</p>
+          <pre><code>const Status = enum(u8) {
+    idle = 0,
+    busy = 1,
+};
+
+const current: Status = .busy;
+const code: u8 = @intFromEnum(current);</code></pre>
+          <p>An enum is not indexed like an array. In Zig 0.16, <code>std.enums.values(Status)</code> returns a <code>[]const Status</code> containing every named value in declaration order. Use <code>@tagName(value)</code> when the textual tag name is needed. <code>@TypeOf</code> reports an expression's type; it does not enumerate tags.</p>
           <div class="callout rule">
             <p><strong>Exhaustiveness:</strong> Zig requires every possible enum tag to be handled. Adding a new tag therefore points directly to mappings that need updating.</p>
           </div>
@@ -756,6 +769,10 @@ while (iterator.next()) |entry| {
         <h2>Do I need to store a slice's size separately?</h2>
         <div class="answer">
           <p>No. A slice stores a pointer and a length, available as <code>slice.len</code>. A separate size field duplicates state and can become inconsistent.</p>
+          <pre><code>[3]T         // array value; length is part of the type
+*const [3]T  // pointer to an exact three-element array
+[]const T    // read-only slice; pointer and runtime length</code></pre>
+          <p>A slice is not lengthless: check <code>slice.len &gt; index</code> before indexing when the caller may provide short input. A fixed-bound expression such as <code>slice[0..3]</code> can produce a pointer to an exact three-element array; that pointer is still different from the array value itself.</p>
           <p>Check for an empty slice before indexing its last element or using an aggregate that requires data:</p>
           <pre><code>if (values.len == 0) return null;
 
@@ -808,6 +825,33 @@ var larger = Bounded(5){};</code></pre>
             <p><strong>Invariant:</strong> <code>values[0..used]</code> is initialized and sorted. <code>values[used..values.len]</code> is never read. The logical length never exceeds capacity.</p>
           </div>
           <p>For capacity <code>k</code> and <code>n</code> inputs, bounded insertion takes <code>O(n * k)</code> time and <code>O(k)</code> storage. When <code>k</code> is a fixed small constant, such as three, that is <code>O(n)</code> time and <code>O(1)</code> extra storage.</p>
+        </div>
+      </section>
+
+      <section class="note" id="metric-labels">
+        <span class="topic-number">QUESTION 23</span>
+        <h2>How do I combine encoded digits and format metric units?</h2>
+        <div class="answer">
+          <p>Combine decimal digits with place-value arithmetic rather than text concatenation:</p>
+          <pre><code>const pair = first_digit * 10 + second_digit;
+const raw = pair * std.math.pow(usize, 10, exponent);</code></pre>
+          <p>For enum digits, obtain each backing integer with <code>@intFromEnum</code>. A general digit fold follows the same rule: multiply the accumulated value by ten, then add the next digit.</p>
+          <h3>Choose a metric prefix</h3>
+          <p>Keep the raw value unchanged and advance through a small declaration-order unit table while scaling by groups of one thousand:</p>
+          <pre><code>const units = [_][]const u8{
+    "", "kilo", "mega", "giga",
+};
+
+var scaled: f64 = @floatFromInt(raw);
+var unit_index: usize = 0;
+while (scaled &gt;= 1000 and unit_index + 1 &lt; units.len) {
+    scaled /= 1000;
+    unit_index += 1;
+}</code></pre>
+          <p>Then <code>std.fmt.allocPrint</code> can produce the allocated label using <code>{d}</code> for the scaled number and <code>{s}</code> for the selected prefix. For exact financial or measurement semantics, retain an integer divisor and use quotient/remainder instead of floating point.</p>
+          <div class="callout rule">
+            <p><strong>Separation rule:</strong> The raw value represents the quantity; the divisor or scaled copy represents display units. Do not destroy the raw value while deciding how to format it.</p>
+          </div>
         </div>
       </section>
     </main>
