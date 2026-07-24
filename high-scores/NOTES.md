@@ -106,6 +106,32 @@ insert 30 at 0
 The returned slice is only `high_scores[0..top_len]`; unused slots are never
 exposed.
 
+## Compile-Time Capacity
+
+Array length is part of an array's type, so a reusable fixed-capacity container
+accepts its capacity at compile time and returns a specialized type:
+
+```zig
+fn TopScores(comptime capacity: usize) type {
+    return struct {
+        values: [capacity]i32 = undefined,
+        len: usize = 0,
+    };
+}
+```
+
+Use the type by applying a compile-time value:
+
+```zig
+var top_three = TopScores(3){};
+var top_five = TopScores(5){};
+```
+
+`TopScores(3)` and `TopScores(5)` are distinct types because `[3]i32` and
+`[5]i32` are distinct types. The insertion algorithm can use `values.len`
+instead of repeating the chosen capacity. A capacity read at runtime cannot be
+used as an array length; runtime capacity requires allocated slice storage.
+
 ## Complexity
 
 For a capacity of `k`, each input searches at most `k` initialized entries and

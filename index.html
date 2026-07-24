@@ -792,6 +792,18 @@ while (j &gt; insert_at) : (j -= 1) {
 }
 values[insert_at] = item;</code></pre>
           <p>Changing <code>j</code> only moves the cursor; the assignment in the loop body moves the data. A forward shift would overwrite the source for the next copy.</p>
+          <h3>Compile-time capacity</h3>
+          <p>To reuse the same bounded container with different fixed capacities, return a type from a function taking a <code>comptime</code> parameter:</p>
+          <pre><code>fn Bounded(comptime capacity: usize) type {
+    return struct {
+        values: [capacity]i32 = undefined,
+        used: usize = 0,
+    };
+}
+
+var small = Bounded(3){};
+var larger = Bounded(5){};</code></pre>
+          <p>Each capacity creates a distinct type. Inside it, <code>values.len</code> is the capacity, so the algorithm does not repeat a hard-coded number. A runtime capacity instead requires allocated slice storage and an ownership policy.</p>
           <div class="callout rule">
             <p><strong>Invariant:</strong> <code>values[0..used]</code> is initialized and sorted. <code>values[used..values.len]</code> is never read. The logical length never exceeds capacity.</p>
           </div>

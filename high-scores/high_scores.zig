@@ -10,17 +10,11 @@ pub const HighScores = struct {
         var high_scores: [3]i32 = undefined;
 
         for (scores) |score| {
-            var i: usize = 0;
-            var insert_at = high_scores_len;
+            var insert_at: usize = 0;
 
-            while (i < high_scores_len) : (i += 1) {
-                if (score > high_scores[i]) {
-                    insert_at = i;
-                    break;
-                }
-            }
+            while (insert_at < high_scores_len and score < high_scores[insert_at]) : (insert_at += 1) {}
 
-            if (insert_at == high_scores.len) continue;
+            if (insert_at >= high_scores.len) continue;
 
             const new_len = @min(high_scores_len + 1, high_scores.len);
             var j = new_len - 1;
