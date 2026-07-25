@@ -38,6 +38,8 @@ context-independent answers to future Zig questions.
 | [Resistor Color](./resistor-color/) | Complete |
 | [Resistor Color Duo](./resistor-color-duo/) | Complete |
 | [Resistor Color Trio](./resistor-color-trio/) | Complete |
+| [Allergies](./allergies/) | Complete |
+| [Square Root](./square-root/) | Complete |
 
 ## Running Tests
 

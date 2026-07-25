@@ -336,6 +336,8 @@
       <a href="#slice-aggregates">21 / Slice aggregates</a>
       <a href="#bounded-insertion">22 / Bounded insertion</a>
       <a href="#metric-labels">23 / Metric labels</a>
+      <a href="#sorting">24 / Sorting slices</a>
+      <a href="#bitmask-enumset">25 / Bitmasks and EnumSet</a>
     </nav>
 
     <main>
@@ -851,6 +853,47 @@ while (scaled &gt;= 1000 and unit_index + 1 &lt; units.len) {
           <p>Then <code>std.fmt.allocPrint</code> can produce the allocated label using <code>{d}</code> for the scaled number and <code>{s}</code> for the selected prefix. For exact financial or measurement semantics, retain an integer divisor and use quotient/remainder instead of floating point.</p>
           <div class="callout rule">
             <p><strong>Separation rule:</strong> The raw value represents the quantity; the divisor or scaled copy represents display units. Do not destroy the raw value while deciding how to format it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="sorting">
+        <span class="topic-number">QUESTION 24</span>
+        <h2>Which standard-library sort should I use?</h2>
+        <div class="answer">
+          <p>In Zig 0.16, <code>std.mem.sort</code> and <code>std.mem.sortUnstable</code> sort mutable slices in place. Choose based on whether equal elements must retain their original relative order:</p>
+          <pre><code>std.mem.sort(i32, values, {}, std.sort.asc(i32));
+std.mem.sortUnstable(i32, values, {}, std.sort.desc(i32));</code></pre>
+          <p><code>std.mem.sort</code> is stable with <code>O(n log n)</code> average and worst-case time. <code>std.mem.sortUnstable</code> uses pattern-defeating quicksort, does not preserve equal-element order, and is generally faster. Both mutate the supplied slice.</p>
+          <h3>Ownership changes the choice</h3>
+          <p>A <code>[]const T</code> input cannot be sorted in place. Sorting it would require a mutable owned copy, and that copy needs storage and a lifetime policy. Sorting also destroys the original order, which matters when APIs need both sorted results and insertion-order information.</p>
+          <div class="callout rule">
+            <p><strong>Top-k rule:</strong> Sorting all <code>n</code> values costs <code>O(n log n)</code>. Keeping only a fixed number <code>k</code> of best values can remain <code>O(n)</code> when <code>k</code> is a small compile-time constant.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="bitmask-enumset">
+        <span class="topic-number">QUESTION 25</span>
+        <h2>How do I turn an integer bitmask into an <code>EnumSet</code>?</h2>
+        <div class="answer">
+          <p>When only the low bits are part of a format, narrow a larger unsigned integer with intentional truncation:</p>
+          <pre><code>const relevant: u8 = @truncate(value);</code></pre>
+          <p><code>@intCast</code> requires the complete value to fit and traps when it does not. <code>@truncate</code> deliberately discards high bits, which matches bitmask formats that define unknown high flags as irrelevant.</p>
+          <p><code>EnumSet.init</code> accepts a struct of named booleans, not a runtime integer mask. Build a runtime set from empty storage and insert matching enum values:</p>
+          <pre><code>var set: std.EnumSet(Flag) = .empty;
+
+for (std.enums.values(Flag)) |flag| {
+    if (hasFlag(relevant, flag)) set.insert(flag);
+}</code></pre>
+          <h3>Membership is bitwise, not numeric</h3>
+          <p>A larger encoded score does not necessarily contain a particular flag. For a dense zero-based enum with at most eight tags, map a flag to its one-bit mask, then use bitwise AND:</p>
+          <pre><code>const bit: std.math.Log2Int(u8) = @intCast(@intFromEnum(flag));
+const mask: u8 = @as(u8, 1) &lt;&lt; bit;
+return value &amp; mask != 0;</code></pre>
+          <p>A <code>switch</code> can match fixed values and inclusive ranges such as <code>0...10</code>, but it has no relational case syntax like <code>&gt; 10</code>. More importantly, magnitude comparisons are the wrong model for independent bit flags.</p>
+          <div class="callout rule">
+            <p><strong>Bitmask rule:</strong> Normalize the relevant bits, test each flag independently, and never infer membership merely because the encoded number is larger than a flag's value.</p>
           </div>
         </div>
       </section>
