@@ -40,6 +40,7 @@ context-independent answers to future Zig questions.
 | [Resistor Color Trio](./resistor-color-trio/) | Complete |
 | [Allergies](./allergies/) | Complete |
 | [Square Root](./square-root/) | Complete |
+| [Anagram](./anagram/) | Complete |
 
 ## Running Tests
 

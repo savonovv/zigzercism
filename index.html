@@ -338,6 +338,8 @@
       <a href="#metric-labels">23 / Metric labels</a>
       <a href="#sorting">24 / Sorting slices</a>
       <a href="#bitmask-enumset">25 / Bitmasks and EnumSet</a>
+      <a href="#frequency-signatures">26 / Frequency signatures</a>
+      <a href="#error-cleanup">27 / Error-path cleanup</a>
     </nav>
 
     <main>
@@ -894,6 +896,52 @@ return value &amp; mask != 0;</code></pre>
           <p>A <code>switch</code> can match fixed values and inclusive ranges such as <code>0...10</code>, but it has no relational case syntax like <code>&gt; 10</code>. More importantly, magnitude comparisons are the wrong model for independent bit flags.</p>
           <div class="callout rule">
             <p><strong>Bitmask rule:</strong> Normalize the relevant bits, test each flag independently, and never infer membership merely because the encoded number is larger than a flag's value.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="frequency-signatures">
+        <span class="topic-number">QUESTION 26</span>
+        <h2>How do I compare unordered ASCII text without collisions?</h2>
+        <div class="answer">
+          <p>Checksums, bit sets, and fixed-width products are only fingerprints: different inputs can collide, duplicate counts can disappear, and arithmetic can overflow. When the alphabet is small and known, count each symbol instead:</p>
+          <pre><code>fn frequencies(text: []const u8) [26]usize {
+    var counts = [_]usize{0} ** 26;
+
+    for (text) |character| {
+        const lower = std.ascii.toLower(character);
+        const index: usize = lower - 'a';
+        counts[index] += 1;
+    }
+
+    return counts;
+}</code></pre>
+          <p>Fixed arrays can be returned safely by value and compared as slices:</p>
+          <pre><code>const same = std.mem.eql(
+    usize,
+    left_counts[0..],
+    right_counts[0..],
+);</code></pre>
+          <div class="callout mistake">
+            <p><strong>Lifetime mistake:</strong> Returning <code>counts[0..]</code> from a function returns a slice into a local stack array. The array expires at function return, leaving a dangling slice. Return <code>[26]usize</code> by value instead.</p>
+          </div>
+          <p>For case-insensitive identity checks, use <code>std.ascii.eqlIgnoreCase</code> rather than allocating lowercase copies. Frequency construction takes <code>O(n)</code> time and the 26 counters use <code>O(1)</code> space.</p>
+        </div>
+      </section>
+
+      <section class="note" id="error-cleanup">
+        <span class="topic-number">QUESTION 27</span>
+        <h2>How do I clean up owned resources when construction fails?</h2>
+        <div class="answer">
+          <p>A function that builds and returns an owned container transfers cleanup responsibility to the caller only on success. If a fallible operation fails first, the function still owns the partially built value:</p>
+          <pre><code>var result = Container.init(allocator);
+errdefer result.deinit();
+
+try result.insert(value);
+return result;</code></pre>
+          <p><code>errdefer</code> runs only when the current scope exits with an error. On success it does nothing, allowing ownership to move to the caller. A regular <code>defer</code> would also run on success and destroy the value immediately before it is returned.</p>
+          <div class="callout rule">
+            <p><strong>Ownership rule:</strong> Before every fallible step, know who cleans up resources already acquired. Use <code>errdefer</code> while constructing an owned return value, and let the successful receiver arrange its matching <code>deinit</code>.</p>
           </div>
         </div>
       </section>
