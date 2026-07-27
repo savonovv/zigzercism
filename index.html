@@ -896,6 +896,17 @@ for (std.enums.values(Flag)) |flag| {
 const mask: u8 = @as(u8, 1) &lt;&lt; bit;
 return value &amp; mask != 0;</code></pre>
           <p>A <code>switch</code> can match fixed values and inclusive ranges such as <code>0...10</code>, but it has no relational case syntax like <code>&gt; 10</code>. More importantly, magnitude comparisons are the wrong model for independent bit flags.</p>
+          <h3>Set, test, clear, and toggle flags</h3>
+          <p>Give each independent fact one named bit. Names preserve the compact representation without forcing readers to decode magic binary literals:</p>
+          <pre><code>const has_letter: u8 = 1 &lt;&lt; 0;
+const has_lowercase: u8 = 1 &lt;&lt; 1;
+const is_question: u8 = 1 &lt;&lt; 2;
+
+state |= has_letter;                 // set
+const set = state &amp; has_letter != 0; // test
+state &amp;= ~has_letter;                // clear
+state ^= has_letter;                 // toggle</code></pre>
+          <p>Combined states are ordinary bitwise OR results. Derive semantic conditions by testing the relevant bits rather than listing every possible numeric mask. For example, an all-uppercase state requires at least one letter and no lowercase letters; without the first condition, punctuation and numbers would be misclassified.</p>
           <div class="callout rule">
             <p><strong>Bitmask rule:</strong> Normalize the relevant bits, test each flag independently, and never infer membership merely because the encoded number is larger than a flag's value.</p>
           </div>

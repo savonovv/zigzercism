@@ -42,6 +42,7 @@ context-independent answers to future Zig questions.
 | [Square Root](./square-root/) | Complete |
 | [Anagram](./anagram/) | Complete |
 | [Binary Search](./binary-search/) | Complete |
+| [Bob](./bob/) | Complete |
 
 ## Running Tests
 
