@@ -340,6 +340,8 @@
       <a href="#bitmask-enumset">25 / Bitmasks and EnumSet</a>
       <a href="#frequency-signatures">26 / Frequency signatures</a>
       <a href="#error-cleanup">27 / Error-path cleanup</a>
+      <a href="#integer-square-root">28 / Integer square root</a>
+      <a href="#binary-search">29 / Binary search</a>
     </nav>
 
     <main>
@@ -942,6 +944,47 @@ return result;</code></pre>
           <p><code>errdefer</code> runs only when the current scope exits with an error. On success it does nothing, allowing ownership to move to the caller. A regular <code>defer</code> would also run on success and destroy the value immediately before it is returned.</p>
           <div class="callout rule">
             <p><strong>Ownership rule:</strong> Before every fallible step, know who cleans up resources already acquired. Use <code>errdefer</code> while constructing an owned return value, and let the successful receiver arrange its matching <code>deinit</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="integer-square-root">
+        <span class="topic-number">QUESTION 28</span>
+        <h2>Which strategy should I use for an integer square root?</h2>
+        <div class="answer">
+          <p>A linear search is a valid first implementation: test successive integers until the square reaches the radicand. It takes <code>O(sqrt(n))</code> time and <code>O(1)</code> space, which is practical for small inputs.</p>
+          <p>For larger domains, binary search reduces the work to <code>O(log n)</code>. Compare a candidate with <code>radicand / candidate</code> rather than multiplying <code>candidate * candidate</code> when the multiplication could overflow.</p>
+          <p>A bit-by-bit integer-root algorithm processes powers of four using shifts, comparisons, and subtraction. In Zig 0.16, <code>std.math.sqrt</code> already uses this approach for unsigned integers and returns the floor of the root, but an exercise may intentionally require implementing the operation without the math library.</p>
+          <div class="callout rule">
+            <p><strong>Contract rule:</strong> If inputs are guaranteed to have whole-number roots, a search may stop on equality. For arbitrary inputs, decide explicitly whether the result should be the floor, ceiling, nearest integer, or an error.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="binary-search">
+        <span class="topic-number">QUESTION 29</span>
+        <h2>How do half-open bounds make binary search safer?</h2>
+        <div class="answer">
+          <p>Represent the active search region as <code>[left, right)</code>: <code>left</code> is included and <code>right</code> is excluded. Initialize <code>left = 0</code> and <code>right = items.len</code>, then continue while <code>left &lt; right</code>. An empty slice naturally starts with equal bounds.</p>
+          <pre><code>const middle = left + (right - left) / 2;
+
+if (items[middle] &lt; target) {
+    left = middle + 1;
+} else if (items[middle] &gt; target) {
+    right = middle;
+} else {
+    return middle;
+}</code></pre>
+          <p>The midpoint formula avoids overflowing <code>left + right</code>. Assigning <code>right = middle</code> avoids unsigned <code>middle - 1</code> underflow. Return <code>null</code> after the bounds meet.</p>
+          <h3>Generic element types</h3>
+          <pre><code>fn search(
+    comptime T: type,
+    target: T,
+    items: []const T,
+) ?usize</code></pre>
+          <p>The element type is selected at compile time while indexes remain <code>usize</code>. Binary search requires sorted random-access input, takes <code>O(log n)</code> time, and uses <code>O(1)</code> extra space.</p>
+          <div class="callout mistake">
+            <p><strong>Progress rule:</strong> Every comparison must either return or shrink the half-open region. If equality changes neither bound, the loop never terminates.</p>
           </div>
         </div>
       </section>

@@ -41,6 +41,7 @@ context-independent answers to future Zig questions.
 | [Allergies](./allergies/) | Complete |
 | [Square Root](./square-root/) | Complete |
 | [Anagram](./anagram/) | Complete |
+| [Binary Search](./binary-search/) | Complete |
 
 ## Running Tests
 
