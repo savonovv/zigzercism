@@ -486,12 +486,28 @@ return buffer[0..source.len];</code></pre>
                 <td>Reversing, filtering, or changing bytes while copying.</td>
               </tr>
               <tr>
-                <td>Writer</td>
-                <td>Performing many sequential or formatted writes.</td>
+                <td><code>std.fmt.bufPrint</code></td>
+                <td>Producing one formatted result in caller-provided storage.</td>
+              </tr>
+              <tr>
+                <td><code>std.Io.Writer.fixed</code></td>
+                <td>Appending many sequential or formatted pieces to caller-provided storage.</td>
+              </tr>
+              <tr>
+                <td><code>std.fmt.allocPrint</code></td>
+                <td>Returning newly allocated formatted text whose size is not fixed by the caller.</td>
               </tr>
             </tbody>
           </table>
-          <p>Zig strings are byte slices. Copying a string copies its bytes and does not automatically add a null terminator.</p>
+          <p>Zig strings are byte slices, so reading existing text usually needs no writer at all: borrow a <code>[]const u8</code> and use loops, <code>std.mem</code>, or <code>std.ascii</code>. Use a writer when constructing output incrementally; it owns the write position, not the underlying storage.</p>
+          <pre><code>var writer = std.Io.Writer.fixed(buffer);
+try writer.writeAll("count: ");
+try writer.print("{d}", .{count});
+return writer.buffered();</code></pre>
+          <p>A type can define <code>format</code> and use <code>{f}</code> when the same transformed view should be reusable inside format strings. For a one-off transformation, direct byte writes are usually simpler. Copying a string copies its bytes and does not automatically add a null terminator.</p>
+          <div class="callout rule">
+            <p><strong>Choice rule:</strong> Start with slices. Add a fixed writer for incremental construction, and allocate only when the result must own dynamically sized storage.</p>
+          </div>
         </div>
       </section>
 

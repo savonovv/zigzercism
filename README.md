@@ -43,6 +43,7 @@ context-independent answers to future Zig questions.
 | [Anagram](./anagram/) | Complete |
 | [Binary Search](./binary-search/) | Complete |
 | [Bob](./bob/) | Complete |
+| [Bottle Song](./bottle-song/) | Complete |
 
 ## Running Tests
 
