@@ -44,6 +44,7 @@ context-independent answers to future Zig questions.
 | [Binary Search](./binary-search/) | Complete |
 | [Bob](./bob/) | Complete |
 | [Bottle Song](./bottle-song/) | Complete |
+| [D&amp;D Character](./dnd-character/) | Complete |
 
 ## Running Tests
 

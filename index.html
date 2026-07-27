@@ -342,6 +342,10 @@
       <a href="#error-cleanup">27 / Error-path cleanup</a>
       <a href="#integer-square-root">28 / Integer square root</a>
       <a href="#binary-search">29 / Binary search</a>
+      <a href="#random-state">30 / Random state</a>
+      <a href="#random-dependencies">31 / Random dependencies</a>
+      <a href="#runtime-fields">32 / Runtime fields</a>
+      <a href="#signed-division">33 / Signed division</a>
     </nav>
 
     <main>
@@ -1012,6 +1016,72 @@ if (items[middle] &lt; target) {
           <p>The element type is selected at compile time while indexes remain <code>usize</code>. Binary search requires sorted random-access input, takes <code>O(log n)</code> time, and uses <code>O(1)</code> extra space.</p>
           <div class="callout mistake">
             <p><strong>Progress rule:</strong> Every comparison must either return or shrink the half-open region. If equality changes neither bound, the loop never terminates.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="random-state">
+        <span class="topic-number">QUESTION 30</span>
+        <h2>How does pseudo-random state work?</h2>
+        <div class="answer">
+          <p>A pseudo-random generator is a deterministic state machine. Its seed selects a sequence, and every generated value advances the state:</p>
+          <pre><code>var prng = std.Random.DefaultPrng.init(123);
+const random = prng.random();
+
+const die = random.intRangeAtMost(i8, 1, 6);</code></pre>
+          <p><code>intRangeAtMost</code> includes both endpoints; <code>intRangeLessThan</code> excludes the upper endpoint. Reinitializing a generator with the same seed before every draw repeats its first value, so generator state must outlive the sequence of draws.</p>
+          <p>A fixed seed is useful for reproducible tests but repeats the same sequence on every process start. A CSPRNG with a hard-coded seed has the same limitation; changing the algorithm does not create entropy.</p>
+          <div class="callout mistake">
+            <p><strong>Lifetime mistake:</strong> A <code>std.Random</code> interface points to generator state. Do not obtain it from a temporary generator that immediately expires. Store the generator for at least as long as the interface is used.</p>
+          </div>
+          <p>When an API requires a fixed byte-array seed, remember that a string literal has pointer type such as <code>*const [32:0]u8</code>. Dereference it with <code>.*</code> when an array value is intentionally required.</p>
+        </div>
+      </section>
+
+      <section class="note" id="random-dependencies">
+        <span class="topic-number">QUESTION 31</span>
+        <h2>Where should randomness come from?</h2>
+        <div class="answer">
+          <p>There is no truly seedless PRNG. APIs that appear seedless obtain and manage entropy through another dependency, typically operating-system I/O. In Zig 0.16, <code>std.Random.IoSource</code> adapts <code>std.Io</code> to the common random interface:</p>
+          <pre><code>fn choose(io: std.Io) u8 {
+    var source: std.Random.IoSource = .{ .io = io };
+    const random = source.interface();
+    return random.intRangeAtMost(u8, 1, 6);
+}</code></pre>
+          <p>In an application, create or receive <code>std.Io</code> near the entry point and pass <code>std.Io</code> or <code>std.Random</code> down through the call chain. This dependency injection makes tests deterministic and avoids hidden global state.</p>
+          <div class="callout rule">
+            <p><strong>API tradeoff:</strong> A fixed callback signature with no random parameter may force persistent module state. That can be acceptable for a small single-threaded exercise, but shared mutable PRNG state requires synchronization in concurrent code.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="runtime-fields">
+        <span class="topic-number">QUESTION 32</span>
+        <h2>Can I select struct fields at runtime?</h2>
+        <div class="answer">
+          <p>Struct and tuple field names, types, and offsets are compile-time information. Use <code>inline for</code> when reflecting over fields so Zig unrolls one access per field:</p>
+          <pre><code>inline for (std.meta.fields(T)) |field| {
+    const value = @field(instance, field.name);
+    // value is used at runtime; field selection is compile-time.
+}</code></pre>
+          <p>In Zig 0.16, <code>@typeInfo(T).@"struct".fields</code> exposes field metadata; there is no <code>field_names</code> member. For homogeneous values that require runtime indexing, use an array and a regular <code>for</code> loop instead of reflection.</p>
+          <div class="callout rule">
+            <p><strong>Data-shape rule:</strong> Use structs for named fields with distinct meaning. Use arrays when elements share one type and should be processed uniformly at runtime.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="signed-division">
+        <span class="topic-number">QUESTION 33</span>
+        <h2>How do I divide signed integers with explicit rounding?</h2>
+        <div class="answer">
+          <p>Zig requires signed integer division to state its rounding rule explicitly:</p>
+          <pre><code>const toward_zero = @divTrunc(numerator, denominator);
+const toward_negative_infinity = @divFloor(numerator, denominator);
+const exact = @divExact(numerator, denominator);</code></pre>
+          <p>The distinction matters for negative odd values: truncating <code>-7 / 2</code> gives <code>-3</code>, while flooring gives <code>-4</code>. Use the operation that matches the domain rule rather than applying floating-point <code>@floor</code> to integer arithmetic.</p>
+          <div class="callout rule">
+            <p><strong>Intent rule:</strong> Explicit division builtins make negative-number behavior visible and prevent an implicit rounding assumption from becoming a boundary bug.</p>
           </div>
         </div>
       </section>
