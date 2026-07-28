@@ -47,6 +47,7 @@ context-independent answers to future Zig questions.
 | [D&amp;D Character](./dnd-character/) | Complete |
 | [ISBN Verifier](./isbn-verifier/) | Complete |
 | [Kindergarten Garden](./kindergarten-garden/) | Complete |
+| [Line Up](./line-up/) | Complete |
 
 ## Running Tests
 

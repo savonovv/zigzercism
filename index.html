@@ -348,6 +348,7 @@
       <a href="#signed-division">33 / Signed division</a>
       <a href="#immutable-text">34 / Immutable text parsing</a>
       <a href="#enum-encoding">35 / Enum encodings</a>
+      <a href="#allocated-formatting">36 / Allocated formatting</a>
     </nav>
 
     <main>
@@ -1142,6 +1143,32 @@ const index = row * row_stride + column;</code></pre>
           <p>Validate the final required column against <code>row_width</code> and the final computed index against <code>input.len</code>. Comparing a column only with the total input length is incorrect because that length includes both rows and the separator.</p>
           <div class="callout rule">
             <p><strong>Representation rule:</strong> Convert tag names with <code>stringToEnum</code>, convert enum values to backing integers with <code>@intFromEnum</code>, and convert validated backing integers with <code>@enumFromInt</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="allocated-formatting">
+        <span class="topic-number">QUESTION 36</span>
+        <h2>Should I calculate formatted output size myself?</h2>
+        <div class="answer">
+          <p>When a function already receives an allocator and returns owned text, let the formatter manage decimal digit counts, separators, and fixed text:</p>
+          <pre><code>return std.fmt.allocPrint(
+    allocator,
+    "{s}: {d}{s}",
+    .{ label, number, suffix },
+);</code></pre>
+          <p><code>{s}</code> formats byte strings and <code>{d}</code> formats a number in decimal. The result is an allocated <code>[]u8</code> that the caller must free with the matching allocator.</p>
+          <p>When an exact caller-managed allocation is genuinely required, <code>std.fmt.count</code> computes the formatted length and <code>std.fmt.bufPrint</code> writes into that storage. This performs a counting pass and a writing pass, so <code>allocPrint</code> is usually clearer for an owned return value.</p>
+          <div class="callout mistake">
+            <p><strong>Size mistake:</strong> <code>@sizeOf(number)</code> is the number's binary storage size, not the number of decimal characters it produces. Manual size formulas must also include every fixed byte, separator, and suffix.</p>
+          </div>
+          <h3>Apply exception rules before general rules</h3>
+          <p>Suffix systems often inspect more than one trailing digit. First check the exceptional final pair, then use the final single digit for the general case:</p>
+          <pre><code>const last_two = number % 100;
+const last_one = number % 10;</code></pre>
+          <p>This ordering prevents a general final-digit rule from incorrectly handling values whose final two digits form an exception.</p>
+          <div class="callout rule">
+            <p><strong>Formatting rule:</strong> Keep semantic selection, such as choosing a suffix, separate from output allocation. Let formatting APIs calculate presentation length.</p>
           </div>
         </div>
       </section>
