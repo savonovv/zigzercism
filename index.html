@@ -347,6 +347,7 @@
       <a href="#runtime-fields">32 / Runtime fields</a>
       <a href="#signed-division">33 / Signed division</a>
       <a href="#immutable-text">34 / Immutable text parsing</a>
+      <a href="#enum-encoding">35 / Enum encodings</a>
     </nav>
 
     <main>
@@ -1111,6 +1112,36 @@ writable[0] = '9'; // allowed</code></pre>
           <p>Subtract <code>'0'</code> only after validating the byte as an ASCII digit. Use <code>{c}</code> to print a byte as a character, <code>{d}</code> to print its numeric value, and <code>{s}</code> for a byte slice.</p>
           <div class="callout rule">
             <p><strong>Parsing rule:</strong> Skip only explicitly allowed separators. Reject unknown bytes instead of silently filtering them, and build a new string only when compacted text is itself the required output.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="enum-encoding">
+        <span class="topic-number">QUESTION 35</span>
+        <h2>How do I convert between enum names, values, and encoded bytes?</h2>
+        <div class="answer">
+          <p>These conversions represent different directions. A runtime string can be matched against enum tag names with <code>std.meta.stringToEnum</code>. The result is optional because the name may not exist:</p>
+          <pre><code>const selected =
+    std.meta.stringToEnum(Choice, name) orelse return error.UnknownChoice;
+const offset = @intFromEnum(selected);</code></pre>
+          <p><code>@intFromEnum</code> then extracts an actual enum value's backing integer. It cannot operate directly on the original string.</p>
+          <p>When an enum deliberately uses encoded byte values, <code>@enumFromInt</code> performs the reverse conversion:</p>
+          <pre><code>const Symbol = enum(u8) {
+    alpha = 'A',
+    beta = 'B',
+};
+
+const symbol: Symbol = @enumFromInt(byte);</code></pre>
+          <p>The expected result type tells Zig which enum to construct. Validate untrusted bytes first because a byte that is not a declared backing value is an invalid enum value.</p>
+          <h3>Index encoded rows without copying</h3>
+          <p>For two equal-width rows separated by one newline, <code>indexOfScalar</code> returns the newline's index, which is also the first row's width. The second row begins one byte later:</p>
+          <pre><code>const row_width =
+    std.mem.indexOfScalar(u8, input, '\n') orelse return error.MissingRow;
+const row_stride = row_width + 1;
+const index = row * row_stride + column;</code></pre>
+          <p>Validate the final required column against <code>row_width</code> and the final computed index against <code>input.len</code>. Comparing a column only with the total input length is incorrect because that length includes both rows and the separator.</p>
+          <div class="callout rule">
+            <p><strong>Representation rule:</strong> Convert tag names with <code>stringToEnum</code>, convert enum values to backing integers with <code>@intFromEnum</code>, and convert validated backing integers with <code>@enumFromInt</code>.</p>
           </div>
         </div>
       </section>
