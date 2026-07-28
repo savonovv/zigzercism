@@ -349,6 +349,7 @@
       <a href="#immutable-text">34 / Immutable text parsing</a>
       <a href="#enum-encoding">35 / Enum encodings</a>
       <a href="#allocated-formatting">36 / Allocated formatting</a>
+      <a href="#utf8-codepoints">37 / UTF-8 code points</a>
     </nav>
 
     <main>
@@ -1170,6 +1171,32 @@ const last_one = number % 10;</code></pre>
           <div class="callout rule">
             <p><strong>Formatting rule:</strong> Keep semantic selection, such as choosing a suffix, separate from output allocation. Let formatting APIs calculate presentation length.</p>
           </div>
+        </div>
+      </section>
+
+      <section class="note" id="utf8-codepoints">
+        <span class="topic-number">QUESTION 37</span>
+        <h2>How do byte slices relate to UTF-8 characters?</h2>
+        <div class="answer">
+          <p>A Zig string is a byte slice such as <code>[]const u8</code>; the type does not store an encoding. A regular <code>for</code> loop therefore yields bytes, not Unicode code points. UTF-8 uses one to four bytes per code point, so slicing at an arbitrary byte index can split an encoded value.</p>
+          <p><code>utf8ValidateSlice</code> scans one complete byte slice and returns one boolean. Placing that call in a formatting argument tuple evaluates it once:</p>
+          <pre><code>std.debug.print(
+    "valid UTF-8: {}\n",
+    .{std.unicode.utf8ValidateSlice(text)},
+);</code></pre>
+          <p>The <code>.{ ... }</code> expression is an anonymous tuple of print arguments, not iteration. Repeated log lines usually mean the surrounding function was called repeatedly, such as once per test.</p>
+          <h3>Iterate code points</h3>
+          <pre><code>const view = std.unicode.Utf8View.init(text) catch unreachable;
+var iterator = view.iterator();
+
+while (iterator.nextCodepointSlice()) |bytes| {
+    // bytes contains one complete UTF-8 code point.
+}</code></pre>
+          <p><code>nextCodepointSlice</code> returns the original bytes for one code point, while <code>nextCodepoint</code> returns its decoded <code>u21</code> value. <code>peek(n)</code> returns a byte slice covering up to the next <code>n</code> complete code points without advancing the iterator.</p>
+          <div class="callout rule">
+            <p><strong>Encoding rule:</strong> Encoding comes from the input contract, not the slice type. UTF-16 normally arrives as <code>[]const u16</code> plus a known byte order; arbitrary bytes cannot be reliably guessed to be UTF-8 or UTF-16.</p>
+          </div>
+          <p>Returning a prefix from the iterator does not allocate. It is a borrowed slice into the original input and remains valid only while that input remains valid. Code points are not the same as user-perceived grapheme clusters, but code-point truncation is correct when that is the stated contract.</p>
         </div>
       </section>
     </main>
