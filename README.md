@@ -45,6 +45,7 @@ context-independent answers to future Zig questions.
 | [Bob](./bob/) | Complete |
 | [Bottle Song](./bottle-song/) | Complete |
 | [D&amp;D Character](./dnd-character/) | Complete |
+| [ISBN Verifier](./isbn-verifier/) | Complete |
 
 ## Running Tests
 

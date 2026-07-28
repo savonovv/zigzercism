@@ -346,6 +346,7 @@
       <a href="#random-dependencies">31 / Random dependencies</a>
       <a href="#runtime-fields">32 / Runtime fields</a>
       <a href="#signed-division">33 / Signed division</a>
+      <a href="#immutable-text">34 / Immutable text parsing</a>
     </nav>
 
     <main>
@@ -1082,6 +1083,34 @@ const exact = @divExact(numerator, denominator);</code></pre>
           <p>The distinction matters for negative odd values: truncating <code>-7 / 2</code> gives <code>-3</code>, while flooring gives <code>-4</code>. Use the operation that matches the domain rule rather than applying floating-point <code>@floor</code> to integer arithmetic.</p>
           <div class="callout rule">
             <p><strong>Intent rule:</strong> Explicit division builtins make negative-number behavior visible and prevent an implicit rounding assumption from becoming a boundary bug.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="immutable-text">
+        <span class="topic-number">QUESTION 34</span>
+        <h2>How do I parse immutable text without creating another string?</h2>
+        <div class="answer">
+          <p>Zig text is usually a byte slice. A <code>u8</code> is one byte; <code>[]u8</code> is a pointer-and-length view whose bytes may be changed; <code>[]const u8</code> is the same kind of view but its bytes may only be read. Iterating a slice copies one byte into the loop capture:</p>
+          <pre><code>for (input) |byte| {
+    // byte has type u8.
+}</code></pre>
+          <p>The <code>const</code> in <code>[]const u8</code> applies to the viewed bytes. This differs from a constant binding to mutable bytes:</p>
+          <pre><code>var storage = [_]u8{ '1', '2', '3' };
+const writable: []u8 = &amp;storage;
+writable[0] = '9'; // allowed</code></pre>
+          <h3>Trimming is not filtering</h3>
+          <p>Trimming an edge can return a smaller slice because the retained bytes remain contiguous. Removing bytes from the middle cannot be represented by one slice: producing compacted text requires mutable or separate storage. Parsing often needs neither. Classify each byte and calculate the result during the same pass:</p>
+          <pre><code>for (input) |byte| {
+    if (byte == allowed_separator) continue;
+    if (!std.ascii.isDigit(byte)) return false;
+
+    const digit = byte - '0';
+    // Consume digit directly.
+}</code></pre>
+          <p>Subtract <code>'0'</code> only after validating the byte as an ASCII digit. Use <code>{c}</code> to print a byte as a character, <code>{d}</code> to print its numeric value, and <code>{s}</code> for a byte slice.</p>
+          <div class="callout rule">
+            <p><strong>Parsing rule:</strong> Skip only explicitly allowed separators. Reject unknown bytes instead of silently filtering them, and build a new string only when compacted text is itself the required output.</p>
           </div>
         </div>
       </section>
