@@ -350,6 +350,7 @@
       <a href="#enum-encoding">35 / Enum encodings</a>
       <a href="#allocated-formatting">36 / Allocated formatting</a>
       <a href="#utf8-codepoints">37 / UTF-8 code points</a>
+      <a href="#divisor-pairs">38 / Divisor pairs</a>
     </nav>
 
     <main>
@@ -1197,6 +1198,34 @@ while (iterator.nextCodepointSlice()) |bytes| {
             <p><strong>Encoding rule:</strong> Encoding comes from the input contract, not the slice type. UTF-16 normally arrives as <code>[]const u16</code> plus a known byte order; arbitrary bytes cannot be reliably guessed to be UTF-8 or UTF-16.</p>
           </div>
           <p>Returning a prefix from the iterator does not allocate. It is a borrowed slice into the original input and remains valid only while that input remains valid. Code points are not the same as user-perceived grapheme clusters, but code-point truncation is correct when that is the stated contract.</p>
+        </div>
+      </section>
+
+      <section class="note" id="divisor-pairs">
+        <span class="topic-number">QUESTION 38</span>
+        <h2>How do I test divisibility and search divisor pairs?</h2>
+        <div class="answer">
+          <p>An unsigned integer divides evenly when its remainder is zero:</p>
+          <pre><code>if (divisor != 0 and number % divisor == 0) {
+    // divisor divides number exactly.
+}</code></pre>
+          <p>Unsigned integer division discards the fractional part, but the remainder is still available through <code>%</code>. Signed integers require explicit <code>@rem</code> or <code>@mod</code> semantics; either can test equality with zero for divisibility.</p>
+          <h3>Discover two divisors at once</h3>
+          <p>When <code>divisor</code> divides <code>number</code>, its paired divisor is <code>number / divisor</code>. Every pair has one member at or below the square root, so searching beyond that boundary only rediscovers reversed pairs:</p>
+          <pre><code>while (divisor &lt;= number / divisor) {
+    if (number % divisor == 0) {
+        const partner = number / divisor;
+        // Account for divisor and partner.
+    }
+    divisor += 1;
+}</code></pre>
+          <p>The division-based boundary is equivalent to <code>divisor * divisor &lt;= number</code> for positive integers but avoids multiplication overflow. If <code>divisor == partner</code>, the number is a perfect square and that divisor must be counted only once. Domain-specific sums may also need to exclude the original number itself.</p>
+          <div class="callout mistake">
+            <p><strong>Overflow timing:</strong> Checking whether a sum exceeded its limit after <code>sum += value</code> is too late if the addition itself can overflow. When crossing the limit already determines the answer, compare <code>value</code> with <code>limit - sum</code> before adding.</p>
+          </div>
+          <div class="callout rule">
+            <p><strong>Complexity:</strong> Scanning all candidates through half the number is <code>O(n)</code>. Divisor pairing reduces the search to <code>O(sqrt(n))</code> time with <code>O(1)</code> extra storage.</p>
+          </div>
         </div>
       </section>
     </main>

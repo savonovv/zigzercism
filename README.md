@@ -49,6 +49,7 @@ context-independent answers to future Zig questions.
 | [Kindergarten Garden](./kindergarten-garden/) | Complete |
 | [Line Up](./line-up/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
+| [Perfect Numbers](./perfect-numbers/) | Complete |
 
 ## Running Tests
 

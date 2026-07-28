@@ -8,6 +8,7 @@ pub const Classification = enum {
 
 pub fn classify(n: u64) Classification {
     std.debug.assert(n != 0);
+    if (n == 1) return .deficient;
 
     var divisor: u64 = 1;
     var parnter_divisor = n;
@@ -16,10 +17,10 @@ pub fn classify(n: u64) Classification {
 
     while (divisor <= n / divisor) : (divisor += 1) {
         if (n % divisor == 0) {
-            sum += divisor + parnter_divisor;
-            if (divisor > parnter_divisor) break;
+            sum += divisor;
             parnter_divisor = n / divisor;
-            sum += divisor + parnter_divisor;
+            if (divisor >= parnter_divisor) break;
+            if (parnter_divisor != n) sum += parnter_divisor;
         }
         if (sum > n) return .abundant;
     }
