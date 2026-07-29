@@ -361,6 +361,7 @@
       <a href="#utf8-codepoints">37 / UTF-8 code points</a>
       <a href="#divisor-pairs">38 / Divisor pairs</a>
       <a href="#parser-state">39 / Parser state</a>
+      <a href="#growable-results">40 / Growable results</a>
     </nav>
 
     <main>
@@ -1265,6 +1266,40 @@ while (iterator.nextCodepointSlice()) |bytes| {
           <p>This small state machine rejects repeated markers and invalid prefixes while still allowing permitted separators between them. A fixed output array can begin as <code>undefined</code> when every element is written before success; return <code>null</code> unless the final initialized count exactly matches the required length.</p>
           <div class="callout rule">
             <p><strong>Grammar rule:</strong> Define accepted bytes, rejected bytes, and pending obligations explicitly. Ignore only known separators, never arbitrary unknown input.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="growable-results">
+        <span class="topic-number">QUESTION 40</span>
+        <h2>How do I return a result whose length is not known yet?</h2>
+        <div class="answer">
+          <p><code>allocator.alloc</code> always requires a runtime length. When the length becomes known only while processing, use a growable list that reallocates as elements are appended:</p>
+          <pre><code>var result: std.ArrayList(u64) = .empty;
+errdefer result.deinit(allocator);
+
+try result.append(allocator, value);
+
+return try result.toOwnedSlice(allocator);</code></pre>
+          <p><code>toOwnedSlice</code> transfers the list's allocation to the caller and empties the list. On an earlier error, <code>errdefer</code> releases partial storage. The successful caller owns the returned slice and must free it with the same allocator.</p>
+          <div class="callout rule">
+            <p><strong>Capacity rule:</strong> An unknown-length result does not use an undefined-size allocation. It starts with zero logical length and grows capacity as needed.</p>
+          </div>
+          <h3>Reduce trial division before optimizing storage</h3>
+          <p>When repeatedly extracting factors, testing every candidate directly is enough; a separate primality test repeats work. Keep a successful candidate so repeated factors are preserved, and advance only after a failed division.</p>
+          <p>Stop when <code>candidate &gt; remaining / candidate</code>. At that point any remainder greater than one is the final prime factor:</p>
+          <pre><code>while (candidate &lt;= remaining / candidate) {
+    if (remaining % candidate == 0) {
+        // Record candidate and reduce remaining.
+    } else {
+        // Advance candidate.
+    }
+}
+
+// A remaining value greater than one is prime.</code></pre>
+          <p>The division-based bound avoids multiplication overflow. Trying <code>2</code> and then only odd candidates removes unnecessary even checks without needing a prime-number helper.</p>
+          <div class="callout rule">
+            <p><strong>Complexity:</strong> Trial division is <code>O(sqrt(n))</code> in the worst case. The growable output uses <code>O(k)</code> memory for the <code>k</code> returned factors.</p>
           </div>
         </div>
       </section>

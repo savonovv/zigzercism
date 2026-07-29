@@ -51,6 +51,7 @@ context-independent answers to future Zig questions.
 | [Micro Blog](./micro-blog/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
+| [Prime Factors](./prime-factors/) | Complete |
 
 ## Running Tests
 
