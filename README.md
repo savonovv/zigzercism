@@ -50,6 +50,7 @@ context-independent answers to future Zig questions.
 | [Line Up](./line-up/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
+| [Phone Number](./phone-number/) | Complete |
 
 ## Running Tests
 

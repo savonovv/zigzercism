@@ -114,6 +114,11 @@
       position: sticky;
       top: 2rem;
       align-self: start;
+      max-height: calc(100vh - 4rem);
+      max-height: calc(100dvh - 4rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
       font-size: 0.78rem;
       line-height: 1.45;
     }
@@ -275,6 +280,10 @@
 
       nav {
         position: static;
+        max-height: none;
+        overflow-y: visible;
+        overscroll-behavior: auto;
+        scrollbar-gutter: auto;
         margin-bottom: 3.5rem;
         padding: 1rem;
         background: rgba(31, 31, 40, 0.7);
@@ -351,6 +360,7 @@
       <a href="#allocated-formatting">36 / Allocated formatting</a>
       <a href="#utf8-codepoints">37 / UTF-8 code points</a>
       <a href="#divisor-pairs">38 / Divisor pairs</a>
+      <a href="#parser-state">39 / Parser state</a>
     </nav>
 
     <main>
@@ -1225,6 +1235,36 @@ while (iterator.nextCodepointSlice()) |bytes| {
           </div>
           <div class="callout rule">
             <p><strong>Complexity:</strong> Scanning all candidates through half the number is <code>O(n)</code>. Divisor pairing reduces the search to <code>O(sqrt(n))</code> time with <code>O(1)</code> extra storage.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="parser-state">
+        <span class="topic-number">QUESTION 39</span>
+        <h2>How do I parse formatted input with explicit state?</h2>
+        <div class="answer">
+          <p>When only a small byte grammar is valid, use an exhaustive <code>switch</code> that states what is accepted. This is safer than ignoring every byte that is not immediately useful:</p>
+          <pre><code>switch (byte) {
+    '0'...'9' =&gt; {
+        // Consume meaningful data.
+    },
+    ' ', '.', '-', '(', ')' =&gt; continue,
+    '+' =&gt; {
+        // Validate and record prefix state.
+    },
+    else =&gt; return null,
+}</code></pre>
+          <p>An empty branch such as <code>=&gt; {}</code> performs no operation. Inside a loop, <code>=&gt; continue</code> more explicitly says that an allowed separator skips the rest of the iteration. Switch prongs cannot overlap and do not fall through; combine identical cases or use an inner <code>if</code> when one value needs additional handling.</p>
+          <h3>Remember obligations across separators</h3>
+          <p>A marker may constrain the next meaningful byte rather than the next physical byte. Record that obligation in state, leave it unchanged while skipping formatting, and resolve it when data arrives:</p>
+          <pre><code>if (prefix_pending) {
+    if (byte != required_prefix) return null;
+    prefix_pending = false;
+    continue;
+}</code></pre>
+          <p>This small state machine rejects repeated markers and invalid prefixes while still allowing permitted separators between them. A fixed output array can begin as <code>undefined</code> when every element is written before success; return <code>null</code> unless the final initialized count exactly matches the required length.</p>
+          <div class="callout rule">
+            <p><strong>Grammar rule:</strong> Define accepted bytes, rejected bytes, and pending obligations explicitly. Ignore only known separators, never arbitrary unknown input.</p>
           </div>
         </div>
       </section>
