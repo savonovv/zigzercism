@@ -52,6 +52,7 @@ context-independent answers to future Zig questions.
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
 | [Prime Factors](./prime-factors/) | Complete |
+| [Protein Translation](./protein-translation/) | Complete |
 
 ## Running Tests
 

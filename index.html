@@ -362,6 +362,7 @@
       <a href="#divisor-pairs">38 / Divisor pairs</a>
       <a href="#parser-state">39 / Parser state</a>
       <a href="#growable-results">40 / Growable results</a>
+      <a href="#fixed-width-keys">41 / Fixed-width keys</a>
     </nav>
 
     <main>
@@ -1285,6 +1286,13 @@ return try result.toOwnedSlice(allocator);</code></pre>
           <div class="callout rule">
             <p><strong>Capacity rule:</strong> An unknown-length result does not use an undefined-size allocation. It starts with zero logical length and grows capacity as needed.</p>
           </div>
+          <h3>Reserve a known upper bound</h3>
+          <p>If the final length is unknown but has a cheap upper bound, reserve that capacity before appending:</p>
+          <pre><code>try result.ensureTotalCapacity(allocator, maximum_items);
+
+// Ordinary append reuses the reserved capacity.
+try result.append(allocator, value);</code></pre>
+          <p>Capacity is writable storage; the list length remains zero until values are appended. Preallocation can avoid growth reallocations but may reserve unused memory when processing stops early. Keep ordinary <code>append</code> unless an <code>appendAssumeCapacity</code> invariant is both obvious and worth enforcing.</p>
           <h3>Reduce trial division before optimizing storage</h3>
           <p>When repeatedly extracting factors, testing every candidate directly is enough; a separate primality test repeats work. Keep a successful candidate so repeated factors are preserved, and advance only after a failed division.</p>
           <p>Stop when <code>candidate &gt; remaining / candidate</code>. At that point any remainder greater than one is the final prime factor:</p>
@@ -1300,6 +1308,33 @@ return try result.toOwnedSlice(allocator);</code></pre>
           <p>The division-based bound avoids multiplication overflow. Trying <code>2</code> and then only odd candidates removes unnecessary even checks without needing a prime-number helper.</p>
           <div class="callout rule">
             <p><strong>Complexity:</strong> Trial division is <code>O(sqrt(n))</code> in the worst case. The growable output uses <code>O(k)</code> memory for the <code>k</code> returned factors.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="fixed-width-keys">
+        <span class="topic-number">QUESTION 41</span>
+        <h2>How do I switch on a fixed-width byte key?</h2>
+        <div class="answer">
+          <p>Zig does not switch directly on arrays or slices. When a key is exactly three bytes, pack it losslessly into a <code>u24</code> and switch on that scalar:</p>
+          <pre><code>fn key(bytes: [3]u8) u24 {
+    return (@as(u24, bytes[0]) &lt;&lt; 16) |
+        (@as(u24, bytes[1]) &lt;&lt; 8) |
+        @as(u24, bytes[2]);
+}</code></pre>
+          <p>The array parameter enforces the length at compile time, so no runtime assertion is needed. A string literal is a pointer to a sentinel-terminated array; <code>"ABC".*</code> dereferences it into an array value suitable for the fixed-size parameter.</p>
+          <pre><code>return switch (key(input)) {
+    key("ABC".*) =&gt; .first,
+    key("DEF".*), key("GHI".*) =&gt; .second,
+    else =&gt; error.UnknownKey,
+};</code></pre>
+          <p>Returning the switch directly gives enum literals such as <code>.first</code> the expected return type. An inferred local containing enum literals, <code>null</code>, and errors may otherwise remain comptime-only because Zig has no concrete runtime type to infer.</p>
+          <h3>Recover a fixed array from a runtime slice</h3>
+          <p>A dynamic range still has slice type and cannot be dereferenced. First take a runtime tail, then a compile-time-sized prefix:</p>
+          <pre><code>const chunk: [3]u8 = input[offset..][0..3].*;</code></pre>
+          <p>Check <code>offset + 3 &lt;= input.len</code> first. This condition includes the final complete chunk and avoids the unsigned underflow caused by subtracting three from a shorter input length.</p>
+          <div class="callout rule">
+            <p><strong>Key rule:</strong> Fixed arrays express width, packed integers enable switching, and an explicit result context turns enum literals into runtime enum values.</p>
           </div>
         </div>
       </section>
