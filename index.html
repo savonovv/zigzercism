@@ -733,6 +733,10 @@ if (distance_squared &lt;= radius_squared) {
     // The point is inside or on the circle.
 }</code></pre>
           <p>Direct multiplication is also clearer than a generic power function when the exponent is exactly two. This avoids both <code>sqrt</code> and <code>pow</code> while preserving boundary comparisons.</p>
+          <h3>Recognize diagonals from coordinate differences</h3>
+          <p>Two grid positions share a diagonal when the absolute row difference equals the absolute column difference:</p>
+          <pre><code>const same_diagonal = @abs(a.row - b.row) == @abs(a.col - b.col);</code></pre>
+          <p>Validate the coordinate range before subtracting signed integers so the differences cannot overflow. If distinct positions are required, reject equal coordinates first: zero row difference and zero column difference also satisfy the equality above.</p>
           <h3>Flatten classifications with early returns</h3>
           <p>When checking ordered thresholds, test them from the most restrictive outside case toward the inside and return immediately:</p>
           <pre><code>if (value &gt; largest_limit) return outside;

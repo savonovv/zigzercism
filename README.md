@@ -54,6 +54,7 @@ context-independent answers to future Zig questions.
 | [Prime Factors](./prime-factors/) | Complete |
 | [Protein Translation](./protein-translation/) | Complete |
 | [Proverb](./proverb/) | Complete |
+| [Queen Attack](./queen-attack/) | Complete |
 
 ## Running Tests
 
