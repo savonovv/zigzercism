@@ -363,6 +363,7 @@
       <a href="#parser-state">39 / Parser state</a>
       <a href="#growable-results">40 / Growable results</a>
       <a href="#fixed-width-keys">41 / Fixed-width keys</a>
+      <a href="#ascii-cycles">42 / ASCII cycles</a>
     </nav>
 
     <main>
@@ -1354,6 +1355,28 @@ try result.append(allocator, value);</code></pre>
           <p>Check <code>offset + 3 &lt;= input.len</code> first. This condition includes the final complete chunk and avoids the unsigned underflow caused by subtracting three from a shorter input length.</p>
           <div class="callout rule">
             <p><strong>Key rule:</strong> Fixed arrays express width, packed integers enable switching, and an explicit result context turns enum literals into runtime enum values.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="ascii-cycles">
+        <span class="topic-number">QUESTION 42</span>
+        <h2>How do I wrap ASCII letters within their alphabet?</h2>
+        <div class="answer">
+          <p>Adding directly to an ASCII byte does not wrap at <code>'z'</code> or <code>'Z'</code>; it continues into punctuation or non-ASCII byte values. Normalize the letter to an offset from zero, apply the cyclic operation, then restore its alphabet base:</p>
+          <pre><code>const base: u8 = if (std.ascii.isLower(byte))
+    'a'
+else if (std.ascii.isUpper(byte))
+    'A'
+else
+    return byte;
+
+const offset: u8 = byte - base;
+const wrapped = (offset + @as(u8, amount)) % 26;
+return base + wrapped;</code></pre>
+          <p>The base preserves case, while remainder keeps the normalized offset in <code>0...25</code>. Apply <code>% 26</code> to the offset rather than the raw ASCII code; the two alphabets begin at different numeric values.</p>
+          <div class="callout rule">
+            <p><strong>Byte-oriented rule:</strong> <code>std.ascii</code> classifies single-byte ASCII characters. Copy nonletters unchanged, and use Unicode-aware decoding when transformations must understand non-ASCII text.</p>
           </div>
         </div>
       </section>
