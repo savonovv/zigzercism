@@ -53,6 +53,7 @@ context-independent answers to future Zig questions.
 | [Phone Number](./phone-number/) | Complete |
 | [Prime Factors](./prime-factors/) | Complete |
 | [Protein Translation](./protein-translation/) | Complete |
+| [Proverb](./proverb/) | Complete |
 
 ## Running Tests
 

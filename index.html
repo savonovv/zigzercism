@@ -990,6 +990,21 @@ errdefer result.deinit();
 try result.insert(value);
 return result;</code></pre>
           <p><code>errdefer</code> runs only when the current scope exits with an error. On success it does nothing, allowing ownership to move to the caller. A regular <code>defer</code> would also run on success and destroy the value immediately before it is returned.</p>
+          <h3>Clean up nested allocations</h3>
+          <p>An outer slice of owned slices has two allocation levels. Track how many entries contain initialized, owned values so an error path never reads or frees undefined entries:</p>
+          <pre><code>const items = try allocator.alloc([]u8, count);
+errdefer allocator.free(items);
+
+var initialized: usize = 0;
+errdefer {
+    for (items[0..initialized]) |item| {
+        allocator.free(item);
+    }
+}
+
+items[initialized] = try createOwnedItem(allocator);
+initialized += 1;</code></pre>
+          <p><code>errdefer</code> actions run in reverse declaration order, so initialized child allocations are released before their outer slice. Increment the logical count only after a child allocation succeeds. On success, the caller must mirror the same ownership graph: free each child, then free the outer slice.</p>
           <div class="callout rule">
             <p><strong>Ownership rule:</strong> Before every fallible step, know who cleans up resources already acquired. Use <code>errdefer</code> while constructing an owned return value, and let the successful receiver arrange its matching <code>deinit</code>.</p>
           </div>
