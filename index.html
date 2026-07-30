@@ -467,6 +467,9 @@ return buffer[0..used];</code></pre>
           <p>To reverse bytes already written into the buffer, reverse only the initialized slice:</p>
           <pre><code>std.mem.reverse(u8, buffer[0..used]);
 return buffer[0..used];</code></pre>
+          <p><code>std.mem.reverse</code> works for any mutable slice, including an <code>ArrayList</code>'s initialized elements:</p>
+          <pre><code>std.mem.reverse(Item, list.items);</code></pre>
+          <p>This reverses in place in <code>O(n)</code> time and <code>O(1)</code> extra space. It needs no allocator; reverse <code>list.items</code> before transferring ownership with <code>toOwnedSlice</code>.</p>
           <p>To copy from another slice in reverse order:</p>
           <pre><code>for (source, 0..) |_, i| {
     buffer[i] = source[source.len - 1 - i];
@@ -948,7 +951,9 @@ state |= has_letter;                 // set
 const set = state &amp; has_letter != 0; // test
 state &amp;= ~has_letter;                // clear
 state ^= has_letter;                 // toggle</code></pre>
+          <p>To extract one bit as the integer <code>0</code> or <code>1</code>, shift it to the lowest position and mask it: <code>(state &gt;&gt; bit_index) &amp; 1</code>.</p>
           <p>Combined states are ordinary bitwise OR results. Derive semantic conditions by testing the relevant bits rather than listing every possible numeric mask. For example, an all-uppercase state requires at least one letter and no lowercase letters; without the first condition, punctuation and numbers would be misclassified.</p>
+          <p>Keep control bits separate from an output enum when they alter processing but are not valid output values. This prevents the public result type from representing states the function should never return.</p>
           <div class="callout rule">
             <p><strong>Bitmask rule:</strong> Normalize the relevant bits, test each flag independently, and never infer membership merely because the encoded number is larger than a flag's value.</p>
           </div>
