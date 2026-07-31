@@ -57,6 +57,7 @@ context-independent answers to future Zig questions.
 | [Queen Attack](./queen-attack/) | Complete |
 | [Rotational Cipher](./rotational-cipher/) | Complete |
 | [Secret Handshake](./secret-handshake/) | Complete |
+| [Sieve](./sieve/) | Complete |
 
 ## Running Tests
 
