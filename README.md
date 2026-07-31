@@ -59,6 +59,7 @@ context-independent answers to future Zig questions.
 | [Secret Handshake](./secret-handshake/) | Complete |
 | [Sieve](./sieve/) | Complete |
 | [Sublist](./sublist/) | Complete |
+| [Twelve Days](./twelve-days/) | Complete |
 
 ## Running Tests
 

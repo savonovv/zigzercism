@@ -459,6 +459,17 @@ for (parts) |part| {
 
 return buffer[0..used];</code></pre>
           <p>A fixed-buffer writer is useful when many operations need to append or format data. It maintains the position and provides operations such as <code>writeAll</code> and <code>print</code>. An explicit cursor is often simpler for a small, fixed set of writes.</p>
+          <pre><code>var writer = std.Io.Writer.fixed(buffer);
+try writer.print("value={d}", .{value});
+return writer.buffered();</code></pre>
+          <p><code>buffered()</code> returns only the initialized prefix. Zig slices already carry their length, so ordinary string results need neither a null terminator nor a special end-of-string byte.</p>
+          <h3>Write separators between items</h3>
+          <p>When exact output must not end with a separator or newline, write it only when another item follows:</p>
+          <pre><code>for (items, 0..) |item, i| {
+    try writer.writeAll(item);
+    if (i + 1 &lt; items.len) try writer.writeAll("\n");
+}</code></pre>
+          <p>A test difference showing <code>\x0a</code> at the expected end of string means the actual slice contains an extra newline; it does not request an end marker.</p>
         </div>
       </section>
 
