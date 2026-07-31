@@ -58,6 +58,7 @@ context-independent answers to future Zig questions.
 | [Rotational Cipher](./rotational-cipher/) | Complete |
 | [Secret Handshake](./secret-handshake/) | Complete |
 | [Sieve](./sieve/) | Complete |
+| [Sublist](./sublist/) | Complete |
 
 ## Running Tests
 

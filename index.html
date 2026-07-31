@@ -365,6 +365,7 @@
       <a href="#fixed-width-keys">41 / Fixed-width keys</a>
       <a href="#ascii-cycles">42 / ASCII cycles</a>
       <a href="#sieve-flags">43 / Sieve flags</a>
+      <a href="#contiguous-search">44 / Contiguous search</a>
     </nav>
 
     <main>
@@ -1407,6 +1408,26 @@ while (candidate &lt;= limit / candidate) : (candidate += 1) {
           <p>After marking, scan indexes from two through the limit and copy marked values into caller-provided storage. Track the number written and return only that initialized prefix. The API must guarantee that the caller's buffer has enough capacity or provide an error channel for insufficient space.</p>
           <div class="callout rule">
             <p><strong>Complexity:</strong> A sieve takes <code>O(n log log n)</code> marking time and <code>O(n)</code> flag storage. Contiguous flags and predictable strided writes are the central data-layout choice.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="contiguous-search">
+        <span class="topic-number">QUESTION 44</span>
+        <h2>How do I compare slices and find a contiguous subslice?</h2>
+        <div class="answer">
+          <p>Use <code>std.mem.eql</code> when two slices must contain the same elements in the same order:</p>
+          <pre><code>const same = std.mem.eql(i32, left, right);</code></pre>
+          <p>Use <code>std.mem.find</code> when searching for one complete slice inside another. It returns the starting index or <code>null</code>:</p>
+          <pre><code>const position = std.mem.find(i32, haystack, needle);
+if (position != null) {
+    // needle occurs contiguously in haystack.
+}</code></pre>
+          <p>This is a contiguous sequence test, not set membership: order and repeated values matter. An empty needle is found at index zero, so empty-subsequence behavior does not need a separate search implementation.</p>
+          <h3>Classify relationships in the right order</h3>
+          <p>Check equality before containment because equal slices contain each other. When lengths differ, the shorter slice is the only possible needle and the longer slice is the haystack; preserve which original input was longer so the result direction remains correct.</p>
+          <div class="callout rule">
+            <p><strong>Version note:</strong> In Zig 0.16, use <code>std.mem.find</code>. The older <code>std.mem.indexOf</code> name is a deprecated alias.</p>
           </div>
         </div>
       </section>
