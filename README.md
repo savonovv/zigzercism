@@ -61,6 +61,7 @@ context-independent answers to future Zig questions.
 | [Sublist](./sublist/) | Complete |
 | [Twelve Days](./twelve-days/) | Complete |
 | [All Your Base](./all-your-base/) | Complete |
+| [Atbash Cipher](./atbash-cipher/) | Complete |
 
 ## Running Tests
 

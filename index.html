@@ -1394,6 +1394,11 @@ const offset: u8 = byte - base;
 const wrapped = (offset + @as(u8, amount)) % 26;
 return base + wrapped;</code></pre>
           <p>The base preserves case, while remainder keeps the normalized offset in <code>0...25</code>. Apply <code>% 26</code> to the offset rather than the raw ASCII code; the two alphabets begin at different numeric values.</p>
+          <h3>Reflect letters and group transformed output</h3>
+          <p>A reversed lowercase alphabet uses the same normalized-offset model, reflected from <code>'z'</code>:</p>
+          <pre><code>const lower = std.ascii.toLower(byte);
+const mirrored = 'z' - (lower - 'a');</code></pre>
+          <p>When transformed output is grouped, count only bytes that survive filtering. Before appending the next retained byte, insert a separator if the current group is full, then reset the group count. Raw input indexes are unreliable because punctuation and whitespace may produce no output, and a final sixth retained character still needs a separator before it.</p>
           <div class="callout rule">
             <p><strong>Byte-oriented rule:</strong> <code>std.ascii</code> classifies single-byte ASCII characters. Copy nonletters unchanged, and use Unicode-aware decoding when transformations must understand non-ASCII text.</p>
           </div>
