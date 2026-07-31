@@ -60,6 +60,7 @@ context-independent answers to future Zig questions.
 | [Sieve](./sieve/) | Complete |
 | [Sublist](./sublist/) | Complete |
 | [Twelve Days](./twelve-days/) | Complete |
+| [All Your Base](./all-your-base/) | Complete |
 
 ## Running Tests
 

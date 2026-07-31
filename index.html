@@ -366,6 +366,7 @@
       <a href="#ascii-cycles">42 / ASCII cycles</a>
       <a href="#sieve-flags">43 / Sieve flags</a>
       <a href="#contiguous-search">44 / Contiguous search</a>
+      <a href="#base-conversion">45 / Base conversion</a>
     </nav>
 
     <main>
@@ -1439,6 +1440,35 @@ if (position != null) {
           <p>Check equality before containment because equal slices contain each other. When lengths differ, the shorter slice is the only possible needle and the longer slice is the haystack; preserve which original input was longer so the result direction remains correct.</p>
           <div class="callout rule">
             <p><strong>Version note:</strong> In Zig 0.16, use <code>std.mem.find</code>. The older <code>std.mem.indexOf</code> name is a deprecated alias.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="base-conversion">
+        <span class="topic-number">QUESTION 45</span>
+        <h2>How do I convert digit sequences between arbitrary bases?</h2>
+        <div class="answer">
+          <p>Use a numeric value as the bridge between representations. The intermediate integer is not a decimal digit sequence; it is a base-independent value held in an integer type.</p>
+          <h3>Decode with multiply-and-add</h3>
+          <p>Horner's method avoids calculating positional powers explicitly. Validate each digit before including it:</p>
+          <pre><code>var value: u32 = 0;
+for (digits) |digit| {
+    if (digit &gt;= input_base) return error.InvalidDigit;
+    value = value * input_base + digit;
+}</code></pre>
+          <p>Validate both bases as at least two. Choose an intermediate type wide enough for the documented input domain, or use checked arithmetic when overflow must become an error.</p>
+          <h3>Encode with repeated division</h3>
+          <p>Each remainder is the next least-significant output digit, so collect remainders and then reverse them:</p>
+          <pre><code>if (value == 0) try output.append(allocator, 0);
+
+while (value &gt; 0) : (value /= output_base) {
+    try output.append(allocator, value % output_base);
+}
+
+std.mem.reverse(u32, output.items);</code></pre>
+          <p>When the API transfers ownership, even the zero result must come from the allocator; do not return a slice backed by a static literal. Use <code>errdefer output.deinit(allocator)</code> before fallible appends and <code>toOwnedSlice</code> on success.</p>
+          <div class="callout rule">
+            <p><strong>Scaling rule:</strong> A native integer bridge is simplest when the complete value fits. For arbitrarily large inputs, repeated division can operate directly on the source digit array. Power-related bases allow specialized grouping, such as four binary digits per hexadecimal digit.</p>
           </div>
         </div>
       </section>
