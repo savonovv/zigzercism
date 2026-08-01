@@ -367,6 +367,7 @@
       <a href="#sieve-flags">43 / Sieve flags</a>
       <a href="#contiguous-search">44 / Contiguous search</a>
       <a href="#base-conversion">45 / Base conversion</a>
+      <a href="#normalize-transpose">46 / Normalize and transpose</a>
     </nav>
 
     <main>
@@ -1474,6 +1475,38 @@ std.mem.reverse(u32, output.items);</code></pre>
           <p>When the API transfers ownership, even the zero result must come from the allocator; do not return a slice backed by a static literal. Use <code>errdefer output.deinit(allocator)</code> before fallible appends and <code>toOwnedSlice</code> on success.</p>
           <div class="callout rule">
             <p><strong>Scaling rule:</strong> A native integer bridge is simplest when the complete value fits. For arbitrarily large inputs, repeated division can operate directly on the source digit array. Power-related bases allow specialized grouping, such as four binary digits per hexadecimal digit.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="normalize-transpose">
+        <span class="topic-number">QUESTION 46</span>
+        <h2>How do I normalize text and read a rectangle by columns?</h2>
+        <div class="answer">
+          <p><code>std.mem.trim</code> removes selected bytes only from the two ends of a slice. To remove punctuation throughout immutable input, filter retained bytes into temporary owned storage:</p>
+          <pre><code>var normalized: std.ArrayList(u8) = .empty;
+defer normalized.deinit(allocator);
+
+for (input) |byte| {
+    if (!std.ascii.isAlphanumeric(byte)) continue;
+    try normalized.append(allocator, std.ascii.toLower(byte));
+}</code></pre>
+          <p>Use <code>defer</code> for temporary storage needed only during the function; it must be released on both success and error. Use a separate result list with <code>errdefer</code> when its allocation transfers to the caller on success.</p>
+          <h3>Transpose row-major data with index arithmetic</h3>
+          <p>For a conceptual rectangle with <code>columns</code> entries per row, row <code>r</code> and column <code>c</code> map to the linear index <code>r * columns + c</code>. Swap the loop order to emit columns:</p>
+          <pre><code>for (0..columns) |c| {
+    for (0..rows) |r| {
+        const index = r * columns + c;
+        if (index &lt; normalized.items.len) {
+            try result.append(allocator, normalized.items[index]);
+        } else {
+            try result.append(allocator, ' ');
+        }
+    }
+}</code></pre>
+          <p>The bounds check models missing cells in the final row and supplies explicit padding. If chunks need separators, append them between outer-loop iterations rather than after the final chunk.</p>
+          <div class="callout rule">
+            <p><strong>Layout rule:</strong> Keep normalized bytes contiguous, derive coordinates mathematically, and separate temporary ownership from returned ownership. The transpose remains <code>O(n)</code> even though it reads the input with a column stride.</p>
           </div>
         </div>
       </section>

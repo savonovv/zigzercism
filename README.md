@@ -62,6 +62,7 @@ context-independent answers to future Zig questions.
 | [Twelve Days](./twelve-days/) | Complete |
 | [All Your Base](./all-your-base/) | Complete |
 | [Atbash Cipher](./atbash-cipher/) | Complete |
+| [Crypto Square](./crypto-square/) | Complete |
 
 ## Running Tests
 
