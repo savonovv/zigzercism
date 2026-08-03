@@ -368,6 +368,7 @@
       <a href="#contiguous-search">44 / Contiguous search</a>
       <a href="#base-conversion">45 / Base conversion</a>
       <a href="#normalize-transpose">46 / Normalize and transpose</a>
+      <a href="#runtime-grids">47 / Runtime grids</a>
     </nav>
 
     <main>
@@ -1507,6 +1508,30 @@ for (input) |byte| {
           <p>The bounds check models missing cells in the final row and supplies explicit padding. If chunks need separators, append them between outer-loop iterations rather than after the final chunk.</p>
           <div class="callout rule">
             <p><strong>Layout rule:</strong> Keep normalized bytes contiguous, derive coordinates mathematically, and separate temporary ownership from returned ownership. The transpose remains <code>O(n)</code> even though it reads the input with a column stride.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="runtime-grids">
+        <span class="topic-number">QUESTION 47</span>
+        <h2>How do I build a symmetric runtime-sized text grid?</h2>
+        <div class="answer">
+          <p>An array type such as <code>[N]u8</code> requires <code>N</code> at compile time. When dimensions depend on runtime input, allocate slices instead. If the final number of rows is already known, allocate the outer slice directly rather than growing an <code>ArrayList</code>:</p>
+          <pre><code>const rows = try allocator.alloc([]u8, side);
+
+const row = try allocator.alloc(u8, side);
+@memset(row, ' ');</code></pre>
+          <p>When each row is independently owned, track the initialized outer prefix and use nested <code>errdefer</code> cleanup as described in the error-path notes. A writer is useful for sequential variable-length output; direct indexing is clearer when every cell position is known mathematically.</p>
+          <h3>Mirror one half into the other</h3>
+          <p>For an odd-sized symmetric grid, map each row to its distance from the nearest vertical edge:</p>
+          <pre><code>const rank = @min(row_index, side - 1 - row_index);
+const center = side / 2;
+
+row[center - rank] = symbol;
+row[center + rank] = symbol;</code></pre>
+          <p>The rank sequence rises to the center and then falls automatically. On the first and last rows both positions are the center, so writing the same byte twice is harmless. Deriving the symbol from <code>rank</code> avoids maintaining separate ascending and descending state.</p>
+          <div class="callout rule">
+            <p><strong>Shape rule:</strong> Use runtime slices for runtime dimensions, initialize the full row background, then write only the positions defined by the geometry.</p>
           </div>
         </div>
       </section>

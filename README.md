@@ -63,6 +63,7 @@ context-independent answers to future Zig questions.
 | [All Your Base](./all-your-base/) | Complete |
 | [Atbash Cipher](./atbash-cipher/) | Complete |
 | [Crypto Square](./crypto-square/) | Complete |
+| [Diamond](./diamond/) | Complete |
 
 ## Running Tests
 
