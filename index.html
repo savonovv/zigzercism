@@ -370,6 +370,7 @@
       <a href="#normalize-transpose">46 / Normalize and transpose</a>
       <a href="#runtime-grids">47 / Runtime grids</a>
       <a href="#window-accumulators">48 / Window accumulators</a>
+      <a href="#phrase-suffixes">49 / Phrase suffixes</a>
     </nav>
 
     <main>
@@ -1556,6 +1557,31 @@ while (start + width &lt;= input.len) : (start += 1) {
           <p>Validate a signed width before converting it to <code>usize</code>. The empty product has value one, while a positive width greater than the input length is invalid. Use an accumulator type wide enough for the maximum possible result; longer input creates more windows, but only the window width controls one product's magnitude.</p>
           <div class="callout rule">
             <p><strong>Boundary rule:</strong> Use <code>&lt;=</code> so a window equal to the full input and the final shorter-offset window are both processed.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="phrase-suffixes">
+        <span class="topic-number">QUESTION 49</span>
+        <h2>How do I compose cumulative text from reusable phrases?</h2>
+        <div class="answer">
+          <p>When each successive output includes one new phrase followed by all earlier phrases, store the fragments from the shared ending outward:</p>
+          <pre><code>const phrases = [_][]const u8{
+    "the final phrase.",
+    "the second phrase leading into ",
+    "the third phrase leading into ",
+};</code></pre>
+          <p>For level <code>n</code>, write the fixed introduction, then traverse phrase indexes from <code>n</code> down to zero. This represents the cumulative structure as data instead of duplicating complete outputs or using recursion.</p>
+          <pre><code>try writer.writeAll("This is ");
+
+var phrase = level;
+while (true) : (phrase -= 1) {
+    try writer.writeAll(phrases[phrase]);
+    if (phrase == 0) break;
+}</code></pre>
+          <p>The break must happen before decrementing zero because <code>usize</code> cannot represent <code>-1</code>. For a range of outputs, append separators only between complete entries. A fixed-buffer writer fits when the caller owns output storage and the result must point into that buffer.</p>
+          <div class="callout rule">
+            <p><strong>Composition rule:</strong> Store changing clauses once, derive cumulative output by index order, and keep separator logic outside the phrase traversal.</p>
           </div>
         </div>
       </section>

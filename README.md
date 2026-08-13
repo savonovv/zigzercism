@@ -46,6 +46,7 @@ context-independent answers to future Zig questions.
 | [Bottle Song](./bottle-song/) | Complete |
 | [D&amp;D Character](./dnd-character/) | Complete |
 | [ISBN Verifier](./isbn-verifier/) | Complete |
+| [House](./house/) | Complete |
 | [Kindergarten Garden](./kindergarten-garden/) | Complete |
 | [Line Up](./line-up/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
