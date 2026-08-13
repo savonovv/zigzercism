@@ -64,6 +64,7 @@ context-independent answers to future Zig questions.
 | [Atbash Cipher](./atbash-cipher/) | Complete |
 | [Crypto Square](./crypto-square/) | Complete |
 | [Diamond](./diamond/) | Complete |
+| [Largest Series Product](./largest-series-product/) | Complete |
 
 ## Running Tests
 
