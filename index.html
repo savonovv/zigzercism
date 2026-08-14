@@ -374,6 +374,7 @@
       <a href="#intrusive-lists">50 / Intrusive lists</a>
       <a href="#recursive-unions">51 / Recursive unions</a>
       <a href="#reverse-checksums">52 / Reverse checksums</a>
+      <a href="#lifo-stacks">53 / LIFO stacks</a>
     </nav>
 
     <main>
@@ -1673,6 +1674,26 @@ digits_seen += 1;</code></pre>
           <p>Track semantic counts separately from raw input length. A minimum-digit rule should be checked directly with <code>digits_seen &lt; minimum</code>, independent of whether the current checksum happens to pass.</p>
           <div class="callout rule">
             <p><strong>State rule:</strong> Validate and normalize one meaningful byte, update the checksum, then advance parity and count state exactly once.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="lifo-stacks">
+        <span class="topic-number">QUESTION 53</span>
+        <h2>How do I validate nested pairs with a stack?</h2>
+        <div class="answer">
+          <p>Matching counts do not prove that delimiters are ordered correctly: crossed pairs can contain equal numbers of every opening and closing symbol. A last-in, first-out stack preserves the nesting obligation. Push each opener; for each closer, pop the most recent opener and verify its type:</p>
+          <pre><code>var stack: std.ArrayList(u8) = .empty;
+defer stack.deinit(allocator);
+
+try stack.append(allocator, opening);
+
+const previous = stack.pop() orelse return false;
+if (!isPair(previous, closing)) return false;</code></pre>
+          <p>In Zig 0.16, <code>append</code> may allocate and therefore needs <code>try</code>. <code>pop</code> returns an optional, so <code>orelse</code> handles a closer that has no opener. Success also requires <code>stack.items.len == 0</code> after scanning, because leftover openers are unmatched.</p>
+          <p>Use <code>defer</code> rather than <code>errdefer</code> for temporary list storage: every return path must release it, including normal boolean results and early mismatch returns. The scan takes <code>O(n)</code> time and <code>O(d)</code> extra space for nesting depth <code>d</code>.</p>
+          <div class="callout rule">
+            <p><strong>Ordering rule:</strong> Counters track quantity; a stack tracks which unfinished pair must close next.</p>
           </div>
         </div>
       </section>

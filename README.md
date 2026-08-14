@@ -52,6 +52,7 @@ context-independent answers to future Zig questions.
 | [Linked List](./linked-list/) | Complete |
 | [Line Up](./line-up/) | Complete |
 | [Luhn](./luhn/) | Complete |
+| [Matching Brackets](./matching-brackets/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
