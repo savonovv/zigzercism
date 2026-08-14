@@ -372,6 +372,7 @@
       <a href="#window-accumulators">48 / Window accumulators</a>
       <a href="#phrase-suffixes">49 / Phrase suffixes</a>
       <a href="#intrusive-lists">50 / Intrusive lists</a>
+      <a href="#recursive-unions">51 / Recursive unions</a>
     </nav>
 
     <main>
@@ -1610,6 +1611,35 @@ next: ?*Node = null,</code></pre>
           <p>When callers construct nodes and pass pointers into the list, the list is intrusive: it links but does not allocate, free, or own those nodes. Deletion repairs the remaining list; clearing a removed node's stale links is an optional defensive API choice unless detached-node state or node reuse is part of the contract.</p>
           <div class="callout rule">
             <p><strong>Invariant:</strong> An empty list has null head and tail with length zero. A non-empty linear list has matching forward/backward links, null outer links, and a length equal to the number of reachable nodes.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="recursive-unions">
+        <span class="topic-number">QUESTION 51</span>
+        <h2>How do tagged unions represent recursively nested data?</h2>
+        <div class="answer">
+          <p>Arrays and slices contain one element type. A tagged union keeps that homogeneous storage while allowing each element to have one of several valid shapes:</p>
+          <pre><code>const Box = union(enum) {
+    none,
+    one: i12,
+    many: []const Box,
+};</code></pre>
+          <p>The tag guarantees exactly one active alternative. A struct with optional value and child fields would permit ambiguous states where both or neither are set. Recursive data must be indirect: the slice in <code>many</code> has fixed pointer-and-length size, while embedding another <code>Box</code> directly would require an infinitely large type.</p>
+          <h3>Traverse by switching on shape</h3>
+          <pre><code>switch (box) {
+    .none =&gt; {},
+    .one =&gt; |value| try result.append(allocator, value),
+    .many =&gt; |children| {
+        for (children) |child| {
+            try appendFlattened(allocator, result, child);
+        }
+    },
+}</code></pre>
+          <p><code>append</code> accepts one element; <code>appendSlice</code> accepts a slice of elements. A recursive function that returns a newly allocated slice can be unwrapped, copied with <code>appendSlice</code>, and freed, but deeply nested values may be allocated and copied once per level.</p>
+          <p>For one-pass output, let the public function own one <code>ArrayList</code> and pass <code>*std.ArrayList(T)</code> into a recursive helper. Every call then appends to the same bookkeeping object. The root <code>errdefer</code> handles failure, and <code>toOwnedSlice</code> transfers the final contiguous result to the caller.</p>
+          <div class="callout rule">
+            <p><strong>Modeling rule:</strong> Use a tagged union for mutually exclusive shapes, a slice or pointer for recursion, and one explicit owner for accumulated output.</p>
           </div>
         </div>
       </section>
