@@ -51,6 +51,7 @@ context-independent answers to future Zig questions.
 | [Kindergarten Garden](./kindergarten-garden/) | Complete |
 | [Linked List](./linked-list/) | Complete |
 | [Line Up](./line-up/) | Complete |
+| [Luhn](./luhn/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
