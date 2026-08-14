@@ -1,49 +1,38 @@
 pub fn LinkedList(comptime T: type) type {
     return struct {
         const Self = @This();
-        // Please implement the doubly linked `Node` (replacing each `void`).
         pub const Node = struct {
             prev: ?*Node = null,
             next: ?*Node = null,
             data: T,
-            fn isTail(node: *Node) bool {
-                return node.next == null;
-            }
         };
 
-        // Please implement the fields of the linked list (replacing each `void`).
-        first: ?*Node = null,
-        last: ?*Node = null,
+        head: ?*Node = null,
+        tail: ?*Node = null,
         len: usize = 0,
 
-        // Please implement the below methods.
-        // You need to add the parameters to each method.
-
         pub fn push(self: *Self, node: *Node) void {
-            if (self.len == 0) {
-                node.prev = null;
-                node.next = null;
-                self.first = node;
-                self.last = node;
+            if (self.tail) |tail| {
+                tail.next = node;
+                node.prev = tail;
             } else {
-                const old_last_node = self.last;
-                old_last_node.?.next = node;
-                node.prev = old_last_node;
-                node.next = null;
-                self.last = node;
+                self.head = node;
+                node.prev = null;
             }
 
+            node.next = null;
+            self.tail = node;
             self.len += 1;
         }
 
         pub fn pop(self: *Self) ?*Node {
-            const popped_node = self.last;
+            const popped_node = self.tail;
             if (popped_node.?.prev == null) {
-                self.first = null;
-                self.last = null;
+                self.head = null;
+                self.tail = null;
             } else {
-                self.last = popped_node.?.prev;
-                self.last.?.next = null;
+                self.tail = popped_node.?.prev;
+                self.tail.?.next = null;
             }
 
             self.len -= 1;
@@ -53,14 +42,28 @@ pub fn LinkedList(comptime T: type) type {
             return popped_node;
         }
 
-        pub fn shift(self: *Self) ?*Node {
-            const shifted_node = self.first;
-            if (shifted_node.?.next == null) {
-                self.first = null;
-                self.last = null;
+        pub fn unshift(self: *Self, node: *Node) void {
+            if (self.head) |head| {
+                head.prev = node;
+                node.next = head;
             } else {
-                self.first = shifted_node.?.next;
-                self.first.?.prev = null;
+                self.tail = node;
+                node.next = null;
+            }
+
+            node.prev = null;
+            self.head = node;
+            self.len += 1;
+        }
+
+        pub fn shift(self: *Self) ?*Node {
+            const shifted_node = self.head;
+            if (shifted_node.?.next == null) {
+                self.head = null;
+                self.tail = null;
+            } else {
+                self.head = shifted_node.?.next;
+                self.head.?.prev = null;
             }
 
             self.len -= 1;
@@ -70,52 +73,17 @@ pub fn LinkedList(comptime T: type) type {
             return shifted_node;
         }
 
-        pub fn unshift(self: *Self, node: *Node) void {
-            if (self.len == 0) {
-                node.prev = null;
-                node.next = null;
-                self.first = node;
-                self.last = node;
-            } else {
-                const old_first_node = self.first;
-                old_first_node.?.prev = node;
-                node.prev = null;
-                node.next = old_first_node;
-                self.first = node;
-            }
-
-            self.len += 1;
-        }
-
         pub fn delete(self: *Self, node: *Node) void {
-            var i: usize = 0;
-            var current_node = self.first;
+            var current_node = self.head;
 
-            while (i < self.len) : (i += 1) {
-                if (current_node == node) {
-                    if (self.len == 1) {
-                        self.first = null;
-                        self.last = null;
-                    } else if (current_node == self.first) {
-                        var new_first = current_node.?.next;
-                        new_first.?.prev = null;
-                        self.first = new_first;
-                    } else if (current_node.?.isTail()) {
-                        var new_last = current_node.?.prev;
-                        new_last.?.next = null;
-                        self.last = new_last;
-                    } else {
-                        var prev = current_node.?.prev;
-                        var next = current_node.?.next;
-                        prev.?.next = next;
-                        next.?.prev = prev;
-                    }
-                    self.len -= 1;
-
-                    return;
-                } else if (!current_node.?.isTail()) {
-                    current_node = current_node.?.next;
-                } else return;
+            while (current_node) |cnode| : (current_node = cnode.next) {
+                if (cnode != node) continue;
+                if (cnode == self.head) self.head = cnode.next;
+                if (cnode == self.tail) self.tail = cnode.prev;
+                if (cnode.prev) |prev| prev.next = cnode.next;
+                if (cnode.next) |next| next.prev = cnode.prev;
+                self.len -= 1;
+                return;
             }
         }
     };
