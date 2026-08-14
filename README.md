@@ -48,6 +48,7 @@ context-independent answers to future Zig questions.
 | [ISBN Verifier](./isbn-verifier/) | Complete |
 | [House](./house/) | Complete |
 | [Kindergarten Garden](./kindergarten-garden/) | Complete |
+| [Linked List](./linked-list/) | Complete |
 | [Line Up](./line-up/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |

@@ -371,6 +371,7 @@
       <a href="#runtime-grids">47 / Runtime grids</a>
       <a href="#window-accumulators">48 / Window accumulators</a>
       <a href="#phrase-suffixes">49 / Phrase suffixes</a>
+      <a href="#intrusive-lists">50 / Intrusive lists</a>
     </nav>
 
     <main>
@@ -1582,6 +1583,33 @@ while (true) : (phrase -= 1) {
           <p>The break must happen before decrementing zero because <code>usize</code> cannot represent <code>-1</code>. For a range of outputs, append separators only between complete entries. A fixed-buffer writer fits when the caller owns output storage and the result must point into that buffer.</p>
           <div class="callout rule">
             <p><strong>Composition rule:</strong> Store changing clauses once, derive cumulative output by index order, and keep separator logic outside the phrase traversal.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="intrusive-lists">
+        <span class="topic-number">QUESTION 50</span>
+        <h2>How do generic intrusive linked lists model <code>self</code> and ownership?</h2>
+        <div class="answer">
+          <p>A function returning <code>type</code> can build one concrete container type per compile-time element type. Inside the returned anonymous struct, <code>@This()</code> names that concrete type:</p>
+          <pre><code>pub fn List(comptime T: type) type {
+    return struct {
+        const Self = @This();
+
+        pub fn push(self: *Self, node: *Node) void {
+            // Mutate the caller's list bookkeeping.
+        }
+    };
+}</code></pre>
+          <p>A pointer receiver is required for mutation; passing <code>Self</code> by value would copy the head, tail, and length fields. Use <code>*const Self</code> for read-only methods.</p>
+          <h3>Represent edges and ownership explicitly</h3>
+          <p>A linear doubly linked node uses optional pointers because its neighbors may not exist:</p>
+          <pre><code>prev: ?*Node = null,
+next: ?*Node = null,</code></pre>
+          <p>The head's <code>prev</code> and tail's <code>next</code> remain null; connecting them would create a different data structure, a circular list. Appending repairs both directions: the old tail points forward to the new node, the new node points back, and the new tail's forward link is null.</p>
+          <p>When callers construct nodes and pass pointers into the list, the list is intrusive: it links but does not allocate, free, or own those nodes. Deletion repairs the remaining list; clearing a removed node's stale links is an optional defensive API choice unless detached-node state or node reuse is part of the contract.</p>
+          <div class="callout rule">
+            <p><strong>Invariant:</strong> An empty list has null head and tail with length zero. A non-empty linear list has matching forward/backward links, null outer links, and a length equal to the number of reachable nodes.</p>
           </div>
         </div>
       </section>
