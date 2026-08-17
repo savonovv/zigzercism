@@ -56,6 +56,7 @@ context-independent answers to future Zig questions.
 | [Matrix](./matrix/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
 | [Nth Prime](./nth-prime/) | Complete |
+| [Pascal's Triangle](./pascals-triangle/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
 | [Prime Factors](./prime-factors/) | Complete |

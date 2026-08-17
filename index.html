@@ -1038,6 +1038,14 @@ errdefer {
 items[initialized] = try createOwnedItem(allocator);
 initialized += 1;</code></pre>
           <p><code>errdefer</code> actions run in reverse declaration order, so initialized child allocations are released before their outer slice. Increment the logical count only after a child allocation succeeds. On success, the caller must mirror the same ownership graph: free each child, then free the outer slice.</p>
+          <h3>Allocate exact nested shapes directly</h3>
+          <p>If the outer count and each child length are already known, allocate them directly instead of growing nested <code>ArrayList</code> values. An allocated outer <code>[][]T</code> initially contains undefined slice descriptors; every entry must be assigned an owned child slice before it is returned:</p>
+          <pre><code>const rows = try allocator.alloc([]u128, row_count);
+
+const current = try allocator.alloc(u128, row_index + 1);
+// Fill current completely.
+rows[row_index] = current;</code></pre>
+          <p>Appending <code>inner.items</code> and then deinitializing <code>inner</code> stores a dangling borrowed slice. Either transfer ownership with <code>toOwnedSlice</code> or allocate the exact child directly. A debug pointer such as <code>0xaaaaaaaaaaaaaaaa</code> usually means an undefined outer slice entry was returned or read before assignment.</p>
           <div class="callout rule">
             <p><strong>Ownership rule:</strong> Before every fallible step, know who cleans up resources already acquired. Use <code>errdefer</code> while constructing an owned return value, and let the successful receiver arrange its matching <code>deinit</code>.</p>
           </div>
