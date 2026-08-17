@@ -1432,6 +1432,19 @@ while (candidate &lt;= limit / candidate) : (candidate += 1) {
 }</code></pre>
           <p>Smaller multiples such as <code>2 * candidate</code> were already cleared by smaller prime factors. The division-based outer bound is equivalent to testing <code>candidate * candidate &lt;= limit</code> but avoids overflow in the condition.</p>
           <p>After marking, scan indexes from two through the limit and copy marked values into caller-provided storage. Track the number written and return only that initialized prefix. The API must guarantee that the caller's buffer has enough capacity or provide an error channel for insufficient space.</p>
+          <h3>Generate by count when no upper limit is known</h3>
+          <p>When the target is a prime index rather than a numeric limit, keep discovered primes and test each new candidate only against those possible divisors:</p>
+          <pre><code>var primes: std.ArrayList(usize) = .empty;
+defer primes.deinit(allocator);
+
+for (primes.items) |divisor| {
+    if (divisor &gt; candidate / divisor) break;
+    if (candidate % divisor == 0) {
+        is_prime = false;
+        break;
+    }
+}</code></pre>
+          <p>After testing two, skip even candidates. Stop when the list length reaches the requested count. The list is temporary working memory rather than returned ownership, so use <code>defer</code>: it must be released on successful scalar return as well as on errors.</p>
           <div class="callout rule">
             <p><strong>Complexity:</strong> A sieve takes <code>O(n log log n)</code> marking time and <code>O(n)</code> flag storage. Contiguous flags and predictable strided writes are the central data-layout choice.</p>
           </div>

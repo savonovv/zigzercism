@@ -55,6 +55,7 @@ context-independent answers to future Zig questions.
 | [Matching Brackets](./matching-brackets/) | Complete |
 | [Matrix](./matrix/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
+| [Nth Prime](./nth-prime/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
 | [Prime Factors](./prime-factors/) | Complete |
