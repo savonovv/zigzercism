@@ -724,6 +724,13 @@ const output = try allocator.alloc(u8, count);
 var tokens = std.mem.tokenizeAny(u8, input, delimiters);
 // Fill output from tokens.</code></pre>
           <p>A two-pass design avoids guessing the output size: count first, allocate exactly once, then fill. Use <code>usize</code> for allocation lengths and slice indexes because it is the native size type used by Zig's memory APIs.</p>
+          <h3>Keep indexes in the token's coordinate system</h3>
+          <p>A tokenizer returns borrowed slices into the original input, but an index produced while iterating a token is relative to that token. Use it with <code>token[index]</code>, not <code>input[index]</code>; after the first token those positions generally refer to different bytes.</p>
+          <p>Strings are byte slices and cannot be concatenated with <code>+</code>. To reorder parts around a split point, append each slice to one owned output:</p>
+          <pre><code>try result.appendSlice(allocator, token[split..]);
+try result.appendSlice(allocator, token[..split]);
+try result.appendSlice(allocator, "ay");</code></pre>
+          <p>Once the split is known, this assembles the transformed token in <code>O(token.len)</code> time without modifying the borrowed input.</p>
           <div class="callout mistake">
             <p><strong>Uninitialized output:</strong> Allocated bytes initially contain no meaningful values. If a consumed iterator makes the write pass skip every assignment, returning the full allocation exposes those uninitialized bytes.</p>
           </div>

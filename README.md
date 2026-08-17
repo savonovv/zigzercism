@@ -59,6 +59,7 @@ context-independent answers to future Zig questions.
 | [Pascal's Triangle](./pascals-triangle/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
+| [Pig Latin](./pig-latin/) | Complete |
 | [Prime Factors](./prime-factors/) | Complete |
 | [Protein Translation](./protein-translation/) | Complete |
 | [Proverb](./proverb/) | Complete |
