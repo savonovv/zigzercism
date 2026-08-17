@@ -375,6 +375,7 @@
       <a href="#recursive-unions">51 / Recursive unions</a>
       <a href="#reverse-checksums">52 / Reverse checksums</a>
       <a href="#lifo-stacks">53 / LIFO stacks</a>
+      <a href="#matrix-tokenization">54 / Matrix tokenization</a>
     </nav>
 
     <main>
@@ -1694,6 +1695,33 @@ if (!isPair(previous, closing)) return false;</code></pre>
           <p>Use <code>defer</code> rather than <code>errdefer</code> for temporary list storage: every return path must release it, including normal boolean results and early mismatch returns. The scan takes <code>O(n)</code> time and <code>O(d)</code> extra space for nesting depth <code>d</code>.</p>
           <div class="callout rule">
             <p><strong>Ordering rule:</strong> Counters track quantity; a stack tracks which unfinished pair must close next.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="matrix-tokenization">
+        <span class="topic-number">QUESTION 54</span>
+        <h2>How do I parse rows and columns from numeric text?</h2>
+        <div class="answer">
+          <p>Tokenizers expose borrowed slices at each delimiter level. Split the input into rows, then tokenize each selected row into numeric fields:</p>
+          <pre><code>var lines = std.mem.splitScalar(u8, input, '\n');
+while (lines.next()) |line| {
+    var fields = std.mem.tokenizeScalar(u8, line, ' ');
+    while (fields.next()) |token| {
+        const value = try std.fmt.parseInt(i16, token, 10);
+    }
+}</code></pre>
+          <p><code>parseInt</code> consumes the complete token, so it handles multiple digits and a leading minus sign without manual character boundaries. It reports invalid characters and values outside the destination integer range.</p>
+          <h3>Select without building a nested matrix</h3>
+          <p>For one row, append every parsed field only when the one-based row counter matches. For one column, visit every row but append only the matching one-based field counter. This produces the requested contiguous output directly and avoids allocating an intermediate two-dimensional structure.</p>
+          <pre><code>var result: std.ArrayList(i16) = .empty;
+errdefer result.deinit(allocator);
+
+try result.append(allocator, value);
+return result.toOwnedSlice(allocator);</code></pre>
+          <p>Iterator capture names must not shadow declarations in scope. If a module already defines a function named <code>row</code>, use a capture such as <code>line</code> or <code>row_text</code>.</p>
+          <div class="callout rule">
+            <p><strong>Parsing rule:</strong> Let delimiters define borrowed token slices, parse each complete token into its semantic type, and allocate only the requested result shape.</p>
           </div>
         </div>
       </section>

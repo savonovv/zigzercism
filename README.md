@@ -53,6 +53,7 @@ context-independent answers to future Zig questions.
 | [Line Up](./line-up/) | Complete |
 | [Luhn](./luhn/) | Complete |
 | [Matching Brackets](./matching-brackets/) | Complete |
+| [Matrix](./matrix/) | Complete |
 | [Micro Blog](./micro-blog/) | Complete |
 | [Perfect Numbers](./perfect-numbers/) | Complete |
 | [Phone Number](./phone-number/) | Complete |
