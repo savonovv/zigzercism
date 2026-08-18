@@ -376,6 +376,7 @@
       <a href="#reverse-checksums">52 / Reverse checksums</a>
       <a href="#lifo-stacks">53 / LIFO stacks</a>
       <a href="#matrix-tokenization">54 / Matrix tokenization</a>
+      <a href="#descending-greedy">55 / Descending greedy tables</a>
     </nav>
 
     <main>
@@ -1762,6 +1763,36 @@ return result.toOwnedSlice(allocator);</code></pre>
           <p>Iterator capture names must not shadow declarations in scope. If a module already defines a function named <code>row</code>, use a capture such as <code>line</code> or <code>row_text</code>.</p>
           <div class="callout rule">
             <p><strong>Parsing rule:</strong> Let delimiters define borrowed token slices, parse each complete token into its semantic type, and allocate only the requested result shape.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="descending-greedy">
+        <span class="topic-number">QUESTION 55</span>
+        <h2>How do I replace nested numeric cases with a greedy table?</h2>
+        <div class="answer">
+          <p>When an output is composed from fixed tokens with numeric values, encode the alternatives as data in descending order. Include exceptional compound tokens, such as subtractive Roman numeral pairs, at their effective values:</p>
+          <pre><code>const Mapping = struct {
+    value: i16,
+    symbols: []const u8,
+};
+
+const mappings = [_]Mapping{
+    .{ .value = 1000, .symbols = "M" },
+    .{ .value = 900, .symbols = "CM" },
+    .{ .value = 500, .symbols = "D" },
+    .{ .value = 400, .symbols = "CD" },
+    // Continue in descending order.
+};</code></pre>
+          <p>Walk the table once. While the remainder can consume an entry, append its token and subtract its value:</p>
+          <pre><code>for (mappings) |mapping| {
+    while (remaining &gt;= mapping.value) : (remaining -= mapping.value) {
+        try result.appendSlice(allocator, mapping.symbols);
+    }
+}</code></pre>
+          <p>This separates stable control flow from changing data and avoids duplicated place-value switches. For Roman numerals, the 13-entry table is fixed and each loop iteration emits output, so work is proportional to the table plus the produced numeral.</p>
+          <div class="callout rule">
+            <p><strong>Greedy rule:</strong> Taking the largest available token is correct only when the representation's value system guarantees a canonical decomposition. Ordering a table does not by itself prove greedy correctness for arbitrary denominations.</p>
           </div>
         </div>
       </section>

@@ -65,6 +65,7 @@ context-independent answers to future Zig questions.
 | [Proverb](./proverb/) | Complete |
 | [Queen Attack](./queen-attack/) | Complete |
 | [Robot Simulator](./robot-simulator/) | Complete |
+| [Roman Numerals](./roman-numerals/) | Complete |
 | [Rotational Cipher](./rotational-cipher/) | Complete |
 | [Secret Handshake](./secret-handshake/) | Complete |
 | [Sieve](./sieve/) | Complete |
