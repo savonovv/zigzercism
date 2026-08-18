@@ -64,6 +64,7 @@ context-independent answers to future Zig questions.
 | [Protein Translation](./protein-translation/) | Complete |
 | [Proverb](./proverb/) | Complete |
 | [Queen Attack](./queen-attack/) | Complete |
+| [Robot Simulator](./robot-simulator/) | Complete |
 | [Rotational Cipher](./rotational-cipher/) | Complete |
 | [Secret Handshake](./secret-handshake/) | Complete |
 | [Sieve](./sieve/) | Complete |

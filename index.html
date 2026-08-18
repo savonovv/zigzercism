@@ -620,6 +620,18 @@ defer allocator.free(result);
 const current: Status = .busy;
 const code: u8 = @intFromEnum(current);</code></pre>
           <p>An enum is not indexed like an array. In Zig 0.16, <code>std.enums.values(Status)</code> returns a <code>[]const Status</code> containing every named value in declaration order. Use <code>@tagName(value)</code> when the textual tag name is needed. <code>@TypeOf</code> reports an expression's type; it does not enumerate tags.</p>
+          <h3>Model state transitions with nested switches</h3>
+          <p>For a small state machine, switch first on the input command and then exhaustively on the current enum state. A pointer receiver lets each transition mutate the same value:</p>
+          <pre><code>switch (command) {
+    'R' =&gt; switch (self.direction) {
+        .north =&gt; self.direction = .east,
+        .east =&gt; self.direction = .south,
+        .south =&gt; self.direction = .west,
+        .west =&gt; self.direction = .north,
+    },
+    else =&gt; {},
+}</code></pre>
+          <p>The outer <code>else</code> must follow the input contract. Use an empty branch when unknown commands are explicitly ignored; use <code>unreachable</code> only when prior validation or the type system makes that input genuinely impossible.</p>
           <div class="callout rule">
             <p><strong>Exhaustiveness:</strong> Zig requires every possible enum tag to be handled. Adding a new tag therefore points directly to mappings that need updating.</p>
           </div>
