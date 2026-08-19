@@ -377,6 +377,7 @@
       <a href="#lifo-stacks">53 / LIFO stacks</a>
       <a href="#matrix-tokenization">54 / Matrix tokenization</a>
       <a href="#descending-greedy">55 / Descending greedy tables</a>
+      <a href="#run-length-codecs">56 / Run-length codecs</a>
     </nav>
 
     <main>
@@ -1793,6 +1794,44 @@ const mappings = [_]Mapping{
           <p>This separates stable control flow from changing data and avoids duplicated place-value switches. For Roman numerals, the 13-entry table is fixed and each loop iteration emits output, so work is proportional to the table plus the produced numeral.</p>
           <div class="callout rule">
             <p><strong>Greedy rule:</strong> Taking the largest available token is correct only when the representation's value system guarantees a canonical decomposition. Ordering a table does not by itself prove greedy correctness for arbitrary denominations.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="run-length-codecs">
+        <span class="topic-number">QUESTION 56</span>
+        <h2>How do I encode and decode runs in one pass?</h2>
+        <div class="answer">
+          <p>For encoding, return immediately on empty input, then initialize the active run from the first byte. Each different byte closes the previous run. The final run needs an explicit flush after the loop because no later byte exists to close it:</p>
+          <pre><code>if (input.len == 0) return buffer[0..0];
+
+var current = input[0];
+var count: usize = 1;
+for (input[1..]) |byte| {
+    if (byte == current) {
+        count += 1;
+        continue;
+    }
+    // Write count when greater than one, then current.
+    current = byte;
+    count = 1;
+}
+// Flush the final run.</code></pre>
+          <p><code>std.fmt.bufPrint</code> can write a decimal count directly into the unused suffix of a caller-provided buffer. Its returned slice reports exactly how many bytes were written, avoiding a separate digit-count calculation.</p>
+          <h3>Parse a digit prefix without a delimiter</h3>
+          <p>During decoding, consecutive ASCII digits define the count substring. Scan to the first non-digit, use a default count of one when the substring is empty, and otherwise parse the complete slice:</p>
+          <pre><code>const start = input_index;
+while (input_index &lt; input.len and std.ascii.isDigit(input[input_index])) {
+    input_index += 1;
+}
+
+const count = if (input_index == start)
+    1
+else
+    std.fmt.parseInt(usize, input[start..input_index], 10) catch unreachable;</code></pre>
+          <p>Repeat the following byte with <code>@memset</code>. Encoding takes <code>O(n)</code> time; decoding takes <code>O(e + d)</code> for encoded length <code>e</code> and decoded length <code>d</code>.</p>
+          <div class="callout rule">
+            <p><strong>Boundary rule:</strong> State changes close completed runs, but end-of-input must close the last run explicitly. For decoding, character class changes replace a missing delimiter.</p>
           </div>
         </div>
       </section>

@@ -45,35 +45,35 @@ test "run-length encode a string-single characters mixed with repeated character
 test "run-length encode a string-multiple whitespace mixed in string" {
     try testEncode("  hsqq qww  ", "2 hs2q q2w2 ");
 }
-//
-// test "run-length encode a string-lowercase characters" {
-//     try testEncode("aabbbcccc", "2a3b4c");
-// }
-//
-// test "run-length decode a string-empty string" {
-//     try testDecode("", "");
-// }
-//
-// test "run-length decode a string-single characters only" {
-//     try testDecode("XYZ", "XYZ");
-// }
-//
-// test "run-length decode a string-string with no single characters" {
-//     try testDecode("2A3B4C", "AABBBCCCC");
-// }
-//
-// test "run-length decode a string-single characters with repeated characters" {
-//     try testDecode("12WB12W3B24WB", "WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWB");
-// }
-//
-// test "run-length decode a string-multiple whitespace mixed in string" {
-//     try testDecode("2 hs2q q2w2 ", "  hsqq qww  ");
-// }
-//
-// test "run-length decode a string-lowercase string" {
-//     try testDecode("2a3b4c", "aabbbcccc");
-// }
-//
-// test "encode and then decode-encode followed by decode gives original string" {
-//     try testConsistency("zzz ZZ  zZ", "zzz ZZ  zZ");
-// }
+
+test "run-length encode a string-lowercase characters" {
+    try testEncode("aabbbcccc", "2a3b4c");
+}
+
+test "run-length decode a string-empty string" {
+    try testDecode("", "");
+}
+
+test "run-length decode a string-single characters only" {
+    try testDecode("XYZ", "XYZ");
+}
+
+test "run-length decode a string-string with no single characters" {
+    try testDecode("2A3B4C", "AABBBCCCC");
+}
+
+test "run-length decode a string-single characters with repeated characters" {
+    try testDecode("12WB12W3B24WB", "WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWB");
+}
+
+test "run-length decode a string-multiple whitespace mixed in string" {
+    try testDecode("2 hs2q q2w2 ", "  hsqq qww  ");
+}
+
+test "run-length decode a string-lowercase string" {
+    try testDecode("2a3b4c", "aabbbcccc");
+}
+
+test "encode and then decode-encode followed by decode gives original string" {
+    try testConsistency("zzz ZZ  zZ", "zzz ZZ  zZ");
+}

@@ -67,6 +67,7 @@ context-independent answers to future Zig questions.
 | [Robot Simulator](./robot-simulator/) | Complete |
 | [Roman Numerals](./roman-numerals/) | Complete |
 | [Rotational Cipher](./rotational-cipher/) | Complete |
+| [Run-Length Encoding](./run-length-encoding/) | Complete |
 | [Secret Handshake](./secret-handshake/) | Complete |
 | [Sieve](./sieve/) | Complete |
 | [Sublist](./sublist/) | Complete |
