@@ -378,6 +378,7 @@
       <a href="#matrix-tokenization">54 / Matrix tokenization</a>
       <a href="#descending-greedy">55 / Descending greedy tables</a>
       <a href="#run-length-codecs">56 / Run-length codecs</a>
+      <a href="#state-invariants">57 / State invariants</a>
     </nav>
 
     <main>
@@ -1832,6 +1833,21 @@ else
           <p>Repeat the following byte with <code>@memset</code>. Encoding takes <code>O(n)</code> time; decoding takes <code>O(e + d)</code> for encoded length <code>e</code> and decoded length <code>d</code>.</p>
           <div class="callout rule">
             <p><strong>Boundary rule:</strong> State changes close completed runs, but end-of-input must close the last run explicitly. For decoding, character class changes replace a missing delimiter.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="note" id="state-invariants">
+        <span class="topic-number">QUESTION 57</span>
+        <h2>How do I classify a state that may be impossible?</h2>
+        <div class="answer">
+          <p>Separate observations from validity. First derive independent facts from the input, such as symbol counts, whether each participant satisfies a winning condition, and whether capacity remains. Do not return a successful state as soon as one fact is found because another fact may contradict it.</p>
+          <p>Next express the process rules as invariants. In an alternating-turn game, valid counts form a small set of relationships; a winner must also match the count relationship for the turn on which that participant could win. Multiple simultaneous winners may be contradictory even though each winning line is locally valid.</p>
+          <h3>Classify in dependency order</h3>
+          <p>Check impossible combinations first, terminal success second, a full non-winning state third, and the ongoing state last. This order prevents a locally true result from hiding globally invalid history.</p>
+          <p>For geometric conditions, generate repeated shapes with loops: one outer index can select each row and column, while a single pass can evaluate both diagonals. The board size remains a rule; the individual lines do not need separate branches.</p>
+          <div class="callout rule">
+            <p><strong>Validation rule:</strong> Compute facts independently, validate relationships between those facts, then classify. Local evidence is not sufficient when the result depends on whether the whole state is reachable.</p>
           </div>
         </div>
       </section>

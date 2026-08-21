@@ -70,6 +70,7 @@ context-independent answers to future Zig questions.
 | [Run-Length Encoding](./run-length-encoding/) | Complete |
 | [Secret Handshake](./secret-handshake/) | Complete |
 | [Sieve](./sieve/) | Complete |
+| [State of Tic-Tac-Toe](./state-of-tic-tac-toe/) | Complete |
 | [Sublist](./sublist/) | Complete |
 | [Twelve Days](./twelve-days/) | Complete |
 | [All Your Base](./all-your-base/) | Complete |
