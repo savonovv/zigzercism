@@ -19,40 +19,34 @@ pub fn gameState(board: []const []const u8) GameState {
         }
     }
 
-    const valid_turn_count = x_count == o_count or x_count == o_count + 1;
-
-    if (!valid_turn_count) return .impossible;
-    if (x_won and o_won) return .impossible;
-    if (x_won and x_count == o_count) return .impossible;
+    const valid_count = x_count == o_count or x_count == o_count + 1;
+    if (!valid_count) return .impossible;
+    if (x_won and o_count >= x_count) return .impossible;
     if (o_won and o_count != x_count) return .impossible;
     if (x_won or o_won) return .win;
-    if (o_count + x_count == 9) return .draw;
+    if (x_count + o_count == 9) return .draw;
+
     return .ongoing;
 }
 
 pub fn hasWon(board: []const []const u8, player: u8) bool {
     const size = board.len;
-    for (0..size) |i| {
-        var complete_row = true;
-        var complete_column = true;
-
-        for (0..size) |j| {
-            complete_row = complete_row and board[i][j] == player;
-
-            complete_column = complete_column and board[j][i] == player;
+    var diagonal_up = true;
+    var diagonal_down = true;
+    for (0..size) |row| {
+        diagonal_up = diagonal_up and board[size - 1 - row][row] == player;
+        diagonal_down = diagonal_down and board[row][row] == player;
+        var full_row = true;
+        var full_col = true;
+        for (0..size) |cell| {
+            full_row = full_row and board[row][cell] == player;
+            full_col = full_col and board[cell][row] == player;
         }
 
-        if (complete_row or complete_column) return true;
+        if (full_row or full_col) return true;
     }
 
-    var falling_diagonal = true;
-    var rising_diagonal = true;
+    if (diagonal_up or diagonal_down) return true;
 
-    for (0..size) |i| {
-        falling_diagonal = falling_diagonal and board[i][i] == player;
-
-        rising_diagonal = rising_diagonal and board[i][size - 1 - i] == player;
-    }
-
-    return falling_diagonal or rising_diagonal;
+    return false;
 }
