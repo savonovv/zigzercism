@@ -1011,7 +1011,7 @@ state ^= has_letter;                 // toggle</code></pre>
         <div class="answer">
           <p>Checksums, bit sets, and fixed-width products are only fingerprints: different inputs can collide, duplicate counts can disappear, and arithmetic can overflow. When the alphabet is small and known, count each symbol instead:</p>
           <pre><code>fn frequencies(text: []const u8) [26]usize {
-    var counts = [_]usize{0} ** 26;
+    var counts: [26]usize = @splat(0);
 
     for (text) |character| {
         const lower = std.ascii.toLower(character);
@@ -1027,6 +1027,13 @@ state ^= has_letter;                 // toggle</code></pre>
     left_counts[0..],
     right_counts[0..],
 );</code></pre>
+          <h3>Use one histogram for presence and multiplicity</h3>
+          <p>When values come from a tiny integer domain, use each value as an index into a fixed count array. A zero count means absent, a positive count means present, and the exact count preserves duplicate information that a set would discard:</p>
+          <pre><code>var counts: [7]u3 = @splat(0);
+for (values) |value| counts[value] += 1;
+
+const has_pair = std.mem.indexOfScalar(u3, counts[0..], 2) != null;</code></pre>
+          <p><code>indexOfScalar</code> returns <code>?usize</code>. Unwrap it before arithmetic; the result is the matching array index, which represents the original value only when the histogram deliberately uses values as indexes.</p>
           <div class="callout mistake">
             <p><strong>Lifetime mistake:</strong> Returning <code>counts[0..]</code> from a function returns a slice into a local stack array. The array expires at function return, leaving a dangling slice. Return <code>[26]usize</code> by value instead.</p>
           </div>

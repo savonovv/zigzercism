@@ -73,6 +73,7 @@ context-independent answers to future Zig questions.
 | [State of Tic-Tac-Toe](./state-of-tic-tac-toe/) | Complete |
 | [Sublist](./sublist/) | Complete |
 | [Twelve Days](./twelve-days/) | Complete |
+| [Yacht](./yacht/) | Complete |
 | [All Your Base](./all-your-base/) | Complete |
 | [Atbash Cipher](./atbash-cipher/) | Complete |
 | [Crypto Square](./crypto-square/) | Complete |
